@@ -675,5 +675,95 @@
     "isAgent": true,
     "isBriefing": true,
     "createdAt": "2026-11-11T18:24:47.082Z"
+  },
+  {
+    "id": "124b0028-138f-46bf-94e7-8cd92ab34f5e",
+    "chatId": "group",
+    "text": "🌙 [Away Mode Active]: Nha បានកំណត់ស្ថានភាព Away Mode (ចេញក្រៅ)។\n\nRex និង Dev នឹងបន្តទទួល និងដំណើរការ tasks ក្នុង Queue ដោយស្វ័យប្រវត្តិនៅ background។ នៅពេលអ្នកត្រឡប់មកវិញ ពួកយើងនឹងរៀបចំ Resume Briefing សង្ខេបជូនភ្លាមៗ!",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:26:57.333Z"
+  },
+  {
+    "id": "7d07c5d4-a673-4a76-8e78-368772bbb32e",
+    "chatId": "group",
+    "text": "🌅 [Resume Briefing]: សូមស្វាគមន៍ការត្រឡប់មកវិញ Nha! 👋\n\nក្នុងកំឡុងពេលអ្នកនៅក្រៅ គ្មាន task ថ្មីក្នុង queue ទេ។ ប្រព័ន្ធបានត្រៀមខ្លួនជាស្រេចសម្រាប់ task បន្ទាប់របស់អ្នក!",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "isBriefing": true,
+    "createdAt": "2026-11-11T18:26:58.107Z"
+  },
+  {
+    "id": "bee99761-e51e-4453-82ea-9c1d0b65473a",
+    "chatId": "group",
+    "text": "🌙 [Away Mode Active]: Nha បានកំណត់ស្ថានភាព Away Mode (ចេញក្រៅ)។\n\nRex និង Dev នឹងបន្តទទួល និងដំណើរការ tasks ក្នុង Queue ដោយស្វ័យប្រវត្តិនៅ background។ នៅពេលអ្នកត្រឡប់មកវិញ ពួកយើងនឹងរៀបចំ Resume Briefing សង្ខេបជូនភ្លាមៗ!",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:26:58.640Z"
+  },
+  {
+    "id": "0f0044f5-f77d-4821-9794-c20428a0bab5",
+    "chatId": "group",
+    "text": "🌅 [Resume Briefing]: សូមស្វាគមន៍ការត្រឡប់មកវិញ Nha! 👋\n\nក្នុងកំឡុងពេលអ្នកនៅក្រៅ គ្មាន task ថ្មីក្នុង queue ទេ។ ប្រព័ន្ធបានត្រៀមខ្លួនជាស្រេចសម្រាប់ task បន្ទាប់របស់អ្នក!",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "isBriefing": true,
+    "createdAt": "2026-11-11T18:27:00.991Z"
+  },
+  {
+    "id": "3b76e77d-1b07-4df8-81d5-a8c3e5386b2c",
+    "chatId": "group",
+    "text": "⚙️ [Queue Worker]: កំពុងដំណើរការ task ពី Queue: \"a\"...",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:27:08.976Z"
+  },
+  {
+    "id": "c75d9596-e17a-47c2-b583-9289e0c68b57",
+    "chatId": "group",
+    "text": "បាទ pro! Task `\"a\"` ត្រូវបាន process រួចរាល់ហើយ (`helper.js` និង `validator.js` មានស្រាប់ក្នុង workspace)។ \n\nតើ pro ចង់ឱ្យខ្ញុំធ្វើ task អ្វីបន្តទៀត?",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:27:20.316Z"
+  },
+  {
+    "id": "370868b9-e199-407a-9f1e-3e28a8858139",
+    "chatId": "group",
+    "text": "**QA Review Verdict: Approved ✅**\n\n- **helper.js**: \n  - Correctness & Safety: មានการ handle `isNaN(num)` ត្រឹមត្រូវ និង default currency (`USD`) ។\n  - Readability: Clean code, well-documented JSDoc.\n\n- **validator.js**:\n  - Correctness & Safety: មាន type checking (`typeof email !== 'string'`) និង `trim()` ការពារ edge cases ល្អ។\n  - Security: Regex ត្រឹមត្រូវសម្រាប់ validate email format ទូទៅ។\n\nគ្មាន bug ឬ security vulnerability ទេ។ Code អាច merge ឬ proceed បន្តបាន!",
+    "senderName": "QA Reviewer",
+    "senderRole": "Code Quality & Security",
+    "senderId": "033043b3-3250-41ec-b4ae-ba9b4c46484b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:27:27.966Z"
+  },
+  {
+    "id": "0dd6e5ac-6271-48ea-80a7-c2fc80b7ce1c",
+    "chatId": "group",
+    "text": "hi",
+    "senderName": "You",
+    "isAgent": false,
+    "createdAt": "2026-11-11T18:32:47.234Z"
+  },
+  {
+    "id": "0768b7a8-ba92-4ceb-b5f3-8b85e5e2ed29",
+    "chatId": "group",
+    "text": "📋 [Rex]: បានកត់ត្រាការងាររួចរាល់។ កំពុងរៀបចំចាត់ចែងក្នុងក្រុម...",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:32:47.235Z"
   }
 ]

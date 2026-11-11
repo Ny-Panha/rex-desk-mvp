@@ -1,4 +1,55 @@
-import { ShieldAlert, Check, X, Sun } from 'lucide-react'
+import { ShieldAlert, Check, X, Sun, Bot, User, Code2, Terminal } from 'lucide-react'
+
+// Lightweight parser for code blocks, inline code, and formatting
+function FormattedContent({ text = '' }) {
+  // If text contains triple-backtick code blocks
+  if (text.includes('```')) {
+    const parts = text.split(/(```[\s\S]*?```)/g)
+    return (
+      <div className="space-y-2">
+        {parts.map((part, idx) => {
+          if (part.startsWith('```') && part.endsWith('```')) {
+            const lines = part.slice(3, -3).trim().split('\n')
+            const firstLine = lines[0].trim()
+            const hasLang = /^[a-zA-Z0-9_\-]+$/.test(firstLine)
+            const lang = hasLang ? firstLine : 'code'
+            const code = hasLang ? lines.slice(1).join('\n') : lines.join('\n')
+
+            return (
+              <div
+                key={idx}
+                className="bg-[#080c14] border border-slate-800/80 rounded-xl overflow-hidden my-2.5 shadow-md"
+              >
+                <div className="bg-slate-900/90 px-3 py-1.5 border-b border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                  <div className="flex items-center gap-1.5">
+                    <Code2 size={12} className="text-indigo-400" />
+                    <span>{lang}</span>
+                  </div>
+                  <span className="text-slate-600">read-only</span>
+                </div>
+                <pre className="p-3 text-xs font-mono text-emerald-300 overflow-x-auto leading-relaxed">
+                  <code>{code}</code>
+                </pre>
+              </div>
+            )
+          }
+
+          return (
+            <p key={idx} className="whitespace-pre-wrap leading-relaxed break-words text-slate-200">
+              {part}
+            </p>
+          )
+        })}
+      </div>
+    )
+  }
+
+  return (
+    <p className="whitespace-pre-wrap leading-relaxed break-words text-slate-200">
+      {text}
+    </p>
+  )
+}
 
 export default function MessageBubble({ message, onResolveApproval }) {
   const isAgent = message.isAgent
@@ -9,38 +60,55 @@ export default function MessageBubble({ message, onResolveApproval }) {
       })
     : ''
 
+  // Agent role styling
+  const getRoleBadgeStyle = (role = '') => {
+    const r = role.toLowerCase()
+    if (r.includes('lead') || r.includes('orchestrator')) {
+      return 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
+    }
+    if (r.includes('dev') || r.includes('fullstack')) {
+      return 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+    }
+    if (r.includes('qa') || r.includes('security') || r.includes('quality')) {
+      return 'bg-sky-500/15 text-sky-300 border-sky-500/30'
+    }
+    return 'bg-slate-500/15 text-slate-300 border-slate-500/30'
+  }
+
   if (isAgent) {
-    // Resume Briefing Card rendering
+    // 1. Resume Briefing Card
     if (message.isBriefing) {
       return (
-        <div className="flex justify-start">
-          <div className="max-w-[85%] sm:max-w-[75%]">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <span className="text-xs font-medium text-amber-300">
+        <div className="flex justify-start my-2">
+          <div className="max-w-[92%] sm:max-w-[85%] w-full">
+            <div className="flex items-center gap-2 mb-1.5 px-1">
+              <span className="text-xs font-semibold text-amber-300">
                 {message.senderName}
               </span>
-              <span className="text-[10px] text-amber-400/80 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
+              <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.2 rounded-full">
                 Resume Briefing
               </span>
+              {time && <span className="text-[10px] text-slate-500 font-mono ml-auto">{time}</span>}
             </div>
-            <div className="bg-gradient-to-br from-indigo-950/40 via-slate-900 to-amber-950/20 border-2 border-indigo-500/40 rounded-xl p-4 shadow-lg shadow-indigo-500/5">
-              <div className="flex items-center gap-2 text-indigo-300 font-semibold text-xs tracking-wide uppercase border-b border-indigo-500/20 pb-2 mb-2.5">
-                <Sun size={16} className="text-amber-400 stroke-[2.2]" />
-                <span>Morning / Resume Briefing</span>
+
+            <div className="bg-gradient-to-br from-indigo-950/40 via-[#0f1624] to-amber-950/20 border-2 border-indigo-500/40 rounded-2xl p-4 shadow-xl shadow-indigo-500/5 space-y-3">
+              <div className="flex items-center justify-between border-b border-indigo-500/20 pb-2.5">
+                <div className="flex items-center gap-2 text-indigo-300 font-semibold text-xs uppercase tracking-wide">
+                  <Sun size={16} className="text-amber-400 stroke-[2.2]" />
+                  <span>Morning / Resume Briefing</span>
+                </div>
+                <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                  Autonomous Sync
+                </span>
               </div>
-              <p className="text-sm text-slate-100 whitespace-pre-wrap leading-relaxed">
-                {message.text}
-              </p>
+              <FormattedContent text={message.text} />
             </div>
-            {time && (
-              <p className="text-[10px] text-slate-600 mt-1 ml-1">{time}</p>
-            )}
           </div>
         </div>
       )
     }
 
-    // Approval Gate Card rendering
+    // 2. Approval Gate Card
     if (message.isApproval) {
       const data = message.approvalData || {}
       const isPending = message.approvalStatus === 'pending'
@@ -48,22 +116,27 @@ export default function MessageBubble({ message, onResolveApproval }) {
       const isRejected = message.approvalStatus === 'rejected'
 
       return (
-        <div className="flex justify-start">
-          <div className="max-w-[85%] sm:max-w-[75%]">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <span className="text-xs font-medium text-slate-300">
+        <div className="flex justify-start my-2">
+          <div className="max-w-[92%] sm:max-w-[85%] w-full">
+            <div className="flex items-center gap-2 mb-1.5 px-1">
+              <span className="text-xs font-semibold text-slate-200">
                 {message.senderName}
               </span>
               {message.senderRole && (
-                <span className="text-[10px] text-slate-500 bg-slate-800 px-1 py-0.5 rounded">
+                <span
+                  className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full border ${getRoleBadgeStyle(
+                    message.senderRole
+                  )}`}
+                >
                   {message.senderRole}
                 </span>
               )}
+              {time && <span className="text-[10px] text-slate-500 font-mono ml-auto">{time}</span>}
             </div>
 
-            <div className="bg-slate-900 border-2 border-amber-500/40 rounded-xl p-4 shadow-lg shadow-amber-500/5 space-y-3">
+            <div className="bg-[#0f1623] border-2 border-amber-500/50 rounded-2xl p-4 shadow-xl shadow-amber-500/5 space-y-3.5">
               {/* Header */}
-              <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+              <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
                 <div className="flex items-center gap-2 text-amber-400 font-semibold text-xs tracking-wide uppercase">
                   <ShieldAlert size={16} className="text-amber-400 stroke-[2.2]" />
                   <span>Approval Gate Required</span>
@@ -75,7 +148,7 @@ export default function MessageBubble({ message, onResolveApproval }) {
 
               {/* Title & Description */}
               <div>
-                <h4 className="text-sm font-semibold text-slate-100 mb-1">
+                <h4 className="text-sm font-semibold text-white mb-1">
                   {data.title || 'Critical Action Requested'}
                 </h4>
                 <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">
@@ -83,109 +156,108 @@ export default function MessageBubble({ message, onResolveApproval }) {
                 </p>
               </div>
 
-              {/* Target / Payload highlight */}
+              {/* Payload Highlight */}
               {data.payload && (
-                <div className="bg-slate-950/70 border border-slate-800/80 rounded-lg p-2.5 text-xs font-mono">
+                <div className="bg-[#080c14] border border-slate-800 rounded-xl p-3 text-xs font-mono space-y-1">
                   {data.payload.command && (
-                    <div className="text-slate-400">
-                      <span className="text-slate-500">$ </span>
-                      <span className="text-emerald-300">{data.payload.command}</span>
+                    <div className="text-slate-300 flex items-center gap-1.5">
+                      <span className="text-slate-500">$</span>
+                      <span className="text-emerald-300 font-semibold">{data.payload.command}</span>
                     </div>
                   )}
                   {data.payload.fileName && (
-                    <div className="text-slate-400">
-                      <span className="text-slate-500">Target File: </span>
-                      <span className="text-rose-300">{data.payload.fileName}</span>
+                    <div className="text-slate-300 flex items-center gap-1.5">
+                      <span className="text-slate-500">Target File:</span>
+                      <span className="text-rose-300 font-semibold">{data.payload.fileName}</span>
                     </div>
                   )}
                   {data.payload.branch && (
-                    <div className="text-slate-400">
-                      <span className="text-slate-500">Branch: </span>
-                      <span className="text-sky-300">{data.payload.branch}</span>
+                    <div className="text-slate-300 flex items-center gap-1.5">
+                      <span className="text-slate-500">Branch:</span>
+                      <span className="text-sky-300 font-semibold">{data.payload.branch}</span>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Action Buttons or Resolution Status */}
-              <div className="pt-1 flex items-center justify-between gap-2">
+              {/* Resolution Buttons */}
+              <div className="pt-1 flex items-center gap-2.5">
                 {isPending ? (
-                  <div className="flex items-center gap-2 w-full">
+                  <>
                     <button
                       onClick={() => onResolveApproval?.(message.approvalId, 'approve')}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium transition-colors shadow-sm cursor-pointer"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white rounded-xl text-xs font-semibold transition-all shadow-md shadow-emerald-600/20 cursor-pointer"
                     >
                       <Check size={14} className="stroke-[2.5]" />
-                      Approve
+                      Approve Action
                     </button>
                     <button
                       onClick={() => onResolveApproval?.(message.approvalId, 'reject')}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-rose-600/80 hover:bg-rose-600 text-white rounded-lg text-xs font-medium transition-colors shadow-sm cursor-pointer"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2 bg-rose-600/80 hover:bg-rose-600 active:scale-98 text-white rounded-xl text-xs font-semibold transition-all shadow-md shadow-rose-600/20 cursor-pointer"
                     >
                       <X size={14} className="stroke-[2.5]" />
-                      Reject
+                      Reject Action
                     </button>
-                  </div>
+                  </>
                 ) : isApproved ? (
-                  <div className="w-full flex items-center gap-2 px-3 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-xs font-medium">
+                  <div className="w-full flex items-center gap-2 px-3.5 py-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs font-semibold">
                     <Check size={15} className="stroke-[2.5]" />
-                    <span>✓ Approved by Nha (Executed)</span>
+                    <span>✓ Approved by Nha (Executed on Workspace)</span>
                   </div>
                 ) : isRejected ? (
-                  <div className="w-full flex items-center gap-2 px-3 py-2 bg-rose-500/10 border border-rose-500/30 rounded-lg text-rose-400 text-xs font-medium">
+                  <div className="w-full flex items-center gap-2 px-3.5 py-2.5 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs font-semibold">
                     <X size={15} className="stroke-[2.5]" />
-                    <span>✕ Rejected by Nha (Blocked)</span>
+                    <span>✕ Rejected by Nha (Blocked safely)</span>
                   </div>
                 ) : null}
               </div>
             </div>
-
-            {time && (
-              <p className="text-[10px] text-slate-600 mt-1 ml-1">{time}</p>
-            )}
           </div>
         </div>
       )
     }
 
+    // 3. Normal Agent Message
     return (
-      <div className="flex justify-start">
-        <div className="max-w-[75%]">
-          <div className="flex items-center gap-1.5 mb-1">
-            <span className="text-xs font-medium text-slate-300">
+      <div className="flex justify-start my-1.5">
+        <div className="max-w-[92%] sm:max-w-[85%]">
+          <div className="flex items-center gap-2 mb-1 px-1">
+            <span className="text-xs font-semibold text-slate-200">
               {message.senderName}
             </span>
             {message.senderRole && (
-              <span className="text-[10px] text-slate-500 bg-slate-800 px-1 py-0.5 rounded">
+              <span
+                className={`text-[9px] font-mono px-1.5 py-0.2 rounded-full border ${getRoleBadgeStyle(
+                  message.senderRole
+                )}`}
+              >
                 {message.senderRole}
               </span>
             )}
+            {time && <span className="text-[10px] text-slate-500 font-mono ml-auto">{time}</span>}
           </div>
-          <div className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2">
-            <p className="text-sm text-slate-200 whitespace-pre-wrap break-words">
-              {message.text}
-            </p>
+
+          <div className="bg-[#0f1623] border border-slate-800/90 rounded-2xl rounded-tl-xs p-4 shadow-sm">
+            <FormattedContent text={message.text} />
           </div>
-          {time && (
-            <p className="text-[10px] text-slate-600 mt-1 ml-1">{time}</p>
-          )}
         </div>
       </div>
     )
   }
 
-  // User message
+  // User Message
   return (
-    <div className="flex justify-end">
-      <div className="max-w-[75%]">
-        <div className="bg-indigo-500/20 border border-indigo-500/30 rounded-lg px-3 py-2">
-          <p className="text-sm text-slate-100 whitespace-pre-wrap break-words">
+    <div className="flex justify-end my-1.5">
+      <div className="max-w-[85%] sm:max-w-[75%]">
+        <div className="flex items-center justify-end gap-1.5 mb-1 px-1">
+          <span className="text-[10px] text-slate-500 font-mono">{time}</span>
+          <span className="text-xs font-medium text-indigo-300">You</span>
+        </div>
+        <div className="bg-gradient-to-r from-indigo-600/25 to-indigo-500/20 border border-indigo-500/40 rounded-2xl rounded-tr-xs px-4 py-2.5 shadow-sm">
+          <p className="text-sm text-slate-100 whitespace-pre-wrap leading-relaxed break-words">
             {message.text}
           </p>
         </div>
-        {time && (
-          <p className="text-[10px] text-slate-600 mt-1 text-right mr-1">{time}</p>
-        )}
       </div>
     </div>
   )
