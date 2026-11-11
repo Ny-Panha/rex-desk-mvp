@@ -20,7 +20,7 @@
     "name": "QA Reviewer",
     "role": "Code Quality & Security",
     "avatarColor": "#3b82f6",
-    "engine": "echo",
+    "engine": "gemini",
     "createdAt": "2026-11-11T16:48:26.860Z"
   }
 ]

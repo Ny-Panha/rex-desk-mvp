@@ -7,7 +7,7 @@ const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
-const { generateResponse, leadRoute } = require('./services/agentEngine');
+const { generateResponse, leadRoute, getDevWorkspaceDiff } = require('./services/agentEngine');
 
 const app = express();
 const PORT = 5001;
@@ -204,6 +204,35 @@ app.post('/api/messages', async (req, res) => {
           };
           messages.push(devMsg);
           newMessages.push(devMsg);
+
+          // 3. QA Reviewer chain: automatically inspect Dev's diff and review in group chat
+          const qaAgent = agents.find((a) => a.name === 'QA Reviewer');
+          if (qaAgent) {
+            const devDiff = getDevWorkspaceDiff();
+            const updatedHistoryWithDev = [...history, userMsg, rexMsg, devMsg];
+            const qaResponseText = await generateResponse({
+              agent: qaAgent,
+              prompt: `Review Dev's recent code for task: "${text}"`,
+              chatId: 'group',
+              history: updatedHistoryWithDev,
+              senderName: 'System',
+              forceEngine: true,
+              reviewContext: devDiff,
+            });
+
+            const qaMsg = {
+              id: uuidv4(),
+              chatId: 'group',
+              text: qaResponseText,
+              senderName: qaAgent.name,
+              senderRole: qaAgent.role,
+              senderId: qaAgent.id,
+              isAgent: true,
+              createdAt: new Date().toISOString(),
+            };
+            messages.push(qaMsg);
+            newMessages.push(qaMsg);
+          }
         }
       } else if (routing.target === 'QA Reviewer' || /@qa\b/i.test(text)) {
         const qaAgent = agents.find((a) => a.name === 'QA Reviewer');

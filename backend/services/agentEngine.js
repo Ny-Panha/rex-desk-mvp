@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------
 // Rex Desk MVP – Pluggable Agent Engine
-// Step 3: Lead (Rex) Routing & Group Chat Coordination
+// Step 4: QA Reviewer + Git Worktree Chain
 // ---------------------------------------------------------------------------
 
 const { spawn } = require('child_process');
@@ -8,11 +8,14 @@ const path = require('path');
 const fs = require('fs');
 
 const devWorkspace = path.resolve(__dirname, '..', 'workspaces', 'dev');
+const qaWorkspace = path.resolve(__dirname, '..', 'workspaces', 'qa');
 
-// Ensure Dev's sandbox directory exists
-if (!fs.existsSync(devWorkspace)) {
-  fs.mkdirSync(devWorkspace, { recursive: true });
-}
+// Ensure isolated workspaces exist
+[devWorkspace, qaWorkspace].forEach((dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
 
 /**
  * Echo engine – returns a simple echo response.
@@ -35,7 +38,7 @@ function leadRoute(prompt) {
   // Dev keywords (code, files, create, build, fix, etc.)
   const devKeywords = [
     'code', 'file', 'create', 'fix', 'build', 'dev', 'bug', 'write',
-    'កូដ', 'បង្កើត', 'សរសេរ', 'កែ', 'ឯកសារ', '@dev'
+    'function', 'កូដ', 'បង្កើត', 'សរសេរ', 'កែ', 'ឯកសារ', '@dev'
   ];
   const isDevTask = devKeywords.some((k) => p.includes(k));
 
@@ -67,7 +70,30 @@ function leadRoute(prompt) {
 }
 
 /**
- * Run Gemini CLI in headless mode inside the Dev sandbox workspace.
+ * Read the current files/diff created by Dev in devWorkspace for QA to inspect.
+ * @returns {string}
+ */
+function getDevWorkspaceDiff() {
+  try {
+    const entries = fs.readdirSync(devWorkspace);
+    let output = '';
+    for (const entry of entries) {
+      if (entry === '.gitkeep' || entry === '.agents' || entry.startsWith('.')) continue;
+      const fullPath = path.join(devWorkspace, entry);
+      const stat = fs.statSync(fullPath);
+      if (stat.isFile()) {
+        const content = fs.readFileSync(fullPath, 'utf-8');
+        output += `\n=== File: ${entry} ===\n${content}\n`;
+      }
+    }
+    return output || 'No user code files found in Dev workspace.';
+  } catch (err) {
+    return `Error reading workspace: ${err.message}`;
+  }
+}
+
+/**
+ * Run Gemini CLI in headless mode inside the designated agent workspace.
  * @param {{ prompt: string, cwd: string, timeoutMs?: number }} params
  * @returns {Promise<string>}
  */
@@ -80,7 +106,7 @@ function runGeminiCli({ prompt, cwd, timeoutMs = 120000 }) {
     // Windows requires shell: true so gemini.cmd resolves.
     const child = spawn(
       'gemini',
-      ['--skip-trust', '-y', '-m', 'gemini-3.5-flash-lite', '-p', 'Dev:'],
+      ['--skip-trust', '-y', '-m', 'gemini-3.5-flash-lite', '-p', 'Agent:'],
       {
         cwd,
         shell: true,
@@ -138,7 +164,7 @@ function runGeminiCli({ prompt, cwd, timeoutMs = 120000 }) {
 
 /**
  * Generate a response from an agent.
- * @param {{ agent: object, prompt: string, chatId: string, history?: Array, senderName?: string, forceEngine?: boolean }} params
+ * @param {{ agent: object, prompt: string, chatId: string, history?: Array, senderName?: string, forceEngine?: boolean, reviewContext?: string }} params
  * @returns {Promise<string>}
  */
 async function generateResponse({
@@ -148,6 +174,7 @@ async function generateResponse({
   history = [],
   senderName = 'User',
   forceEngine = false,
+  reviewContext = '',
 }) {
   // 1. Lead Agent (Rex)
   if (agent.engine === 'lead') {
@@ -155,42 +182,75 @@ async function generateResponse({
       const routing = leadRoute(prompt);
       return routing.text;
     }
-    return `[${agent.name} (${agent.role})]: ខ្ញុំជា Rex (Lead)។ ក្នុង Group Chat ខ្ញុំទទួលភារកិច្ចពីអ្នក ហើយចាត់ចែងដោយស្វ័យប្រវត្តទៅកាន់ @Dev ឬ @QA! អ្នកអាចសាកល្បងផ្ញើ task ក្នុង Group Chat បាន។`;
+    return `[${agent.name} (${agent.role})]: ខ្ញុំជា Rex (Lead)។ ក្នុង Group Chat ខ្ញុំទទួលភារកិច្ចពីអ្នក ហើយចាត់ចែងដោយស្វ័យប្រវត្តទៅកាន់ @Dev ឬ @QA!`;
   }
 
-  // 2. Dev Agent (Gemini CLI)
-  if (agent.engine === 'gemini') {
-    if (chatId === 'group' && !forceEngine) {
-      const isMentioned = /@dev\b/i.test(prompt);
-      if (!isMentioned) {
-        return echoEngine({ agent, prompt });
+  // 2. Dev Agent (Gemini CLI in devWorkspace)
+  if (agent.name === 'Dev' || agent.engine === 'gemini') {
+    if (agent.name === 'Dev') {
+      if (chatId === 'group' && !forceEngine) {
+        const isMentioned = /@dev\b/i.test(prompt);
+        if (!isMentioned) {
+          return echoEngine({ agent, prompt });
+        }
       }
+
+      const roleInstruction =
+        'You are Dev, a Fullstack Developer agent in Rex Desk. You work ONLY inside backend/workspaces/dev/. Answer in Khmer + simple English.';
+      const recentMessages = history.slice(-10);
+      const contextText =
+        recentMessages.length > 0
+          ? '\n\nConversation context:\n' +
+            recentMessages.map((m) => `${m.senderName}: ${m.text}`).join('\n')
+          : '';
+
+      const fullPrompt = `${roleInstruction}${contextText}\n\n${senderName}: ${prompt}`;
+
+      return await runGeminiCli({
+        prompt: fullPrompt,
+        cwd: devWorkspace,
+        timeoutMs: 120000,
+      });
     }
 
-    // Role instruction + last 10 messages context + new message
-    const roleInstruction =
-      'You are Dev, a Fullstack Developer agent in Rex Desk. You work ONLY inside this folder. Answer in Khmer + simple English.';
-    const recentMessages = history.slice(-10);
-    const contextText =
-      recentMessages.length > 0
-        ? '\n\nConversation context (last messages):\n' +
-          recentMessages.map((m) => `${m.senderName}: ${m.text}`).join('\n')
-        : '';
+    // 3. QA Reviewer Agent (Gemini CLI in qaWorkspace)
+    if (agent.name === 'QA Reviewer' || agent.role.includes('Quality')) {
+      if (chatId === 'group' && !forceEngine) {
+        const isMentioned = /@qa\b/i.test(prompt);
+        if (!isMentioned) {
+          return echoEngine({ agent, prompt });
+        }
+      }
 
-    const fullPrompt = `${roleInstruction}${contextText}\n\n${senderName}: ${prompt}`;
+      const roleInstruction =
+        'You are QA Reviewer, a Senior Code Quality & Security Engineer in Rex Desk. You work ONLY inside backend/workspaces/qa/. When reviewing, analyze the code/diff for correctness, bugs, readability, and security vulnerabilities. Answer concisely in Khmer + simple English.';
 
-    return await runGeminiCli({
-      prompt: fullPrompt,
-      cwd: devWorkspace,
-      timeoutMs: 120000,
-    });
+      const diffText = reviewContext || getDevWorkspaceDiff();
+      const recentMessages = history.slice(-5);
+      const contextText =
+        recentMessages.length > 0
+          ? '\n\nChat context:\n' +
+            recentMessages.map((m) => `${m.senderName}: ${m.text}`).join('\n')
+          : '';
+
+      const fullPrompt = `${roleInstruction}${contextText}\n\nLatest code/diff from Dev workspace:\n${diffText}\n\nTask: ${prompt}\n\nPlease provide your review verdict and critique.`;
+
+      return await runGeminiCli({
+        prompt: fullPrompt,
+        cwd: qaWorkspace,
+        timeoutMs: 120000,
+      });
+    }
   }
 
-  // 3. Fallback: Echo engine (QA Reviewer, etc.)
+  // Fallback: Echo engine
   return echoEngine({ agent, prompt });
 }
 
 module.exports = {
   generateResponse,
   leadRoute,
+  getDevWorkspaceDiff,
+  devWorkspace,
+  qaWorkspace,
 };
