@@ -1,0 +1,48 @@
+[
+  {
+    "id": "ad1f1c23-6f5d-4a8e-a928-815b49352b81",
+    "chatId": "group",
+    "text": "?????? Rex ??? Dev",
+    "senderName": "Nha",
+    "isAgent": false,
+    "createdAt": "2026-11-11T16:48:14.617Z"
+  },
+  {
+    "id": "9c3a98e8-15ee-4d63-adba-451a0a7f197e",
+    "chatId": "group",
+    "text": "[Rex (Lead Orchestrator)]: Echo: ?????? Rex ??? Dev",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "createdAt": "2026-11-11T16:48:14.617Z"
+  },
+  {
+    "id": "85d460df-e546-44bf-8e3d-496c15fc267d",
+    "chatId": "group",
+    "text": "[Dev (Fullstack Developer)]: Echo: ?????? Rex ??? Dev",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T16:48:14.617Z"
+  },
+  {
+    "id": "3a9526ca-4638-4a13-81f4-9aec74e2d55a",
+    "chatId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "text": "Hello Dev, are you ready?",
+    "senderName": "Nha",
+    "isAgent": false,
+    "createdAt": "2026-11-11T16:48:19.787Z"
+  },
+  {
+    "id": "0acef9ff-fd1d-4732-8127-e0c937b7d617",
+    "chatId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "text": "[Dev (Fullstack Developer)]: Echo: Hello Dev, are you ready?",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T16:48:19.787Z"
+  }
+]

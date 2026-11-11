@@ -1,0 +1,23 @@
+[
+  {
+    "id": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "name": "Rex",
+    "role": "Lead Orchestrator",
+    "avatarColor": "#6366f1",
+    "createdAt": "2026-11-11T16:44:44.768Z"
+  },
+  {
+    "id": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "name": "Dev",
+    "role": "Fullstack Developer",
+    "avatarColor": "#10b981",
+    "createdAt": "2026-11-11T16:44:44.768Z"
+  },
+  {
+    "id": "033043b3-3250-41ec-b4ae-ba9b4c46484b",
+    "name": "QA Reviewer",
+    "role": "Code Quality & Security",
+    "avatarColor": "#3b82f6",
+    "createdAt": "2026-11-11T16:48:26.860Z"
+  }
+]
