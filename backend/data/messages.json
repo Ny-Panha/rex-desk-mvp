@@ -765,5 +765,138 @@
     "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
     "isAgent": true,
     "createdAt": "2026-11-11T18:32:47.235Z"
+  },
+  {
+    "id": "42d58ec9-7dc1-4224-8ec1-39a2f43961fc",
+    "chatId": "group",
+    "text": "/queue create file agents",
+    "senderName": "You",
+    "isAgent": false,
+    "createdAt": "2026-11-11T18:36:41.465Z"
+  },
+  {
+    "id": "dc25d1b0-8164-45f8-a68c-93e8c1902913",
+    "chatId": "group",
+    "text": "📋 [Job Queued]: Task \"create file agents\" ត្រូវបានបន្ថែមទៅក្នុង Background Queue ដោយជោគជ័យ! Rex & Dev នឹងដំណើរការ task នេះនៅ background។",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:36:41.466Z"
+  },
+  {
+    "id": "d0de3bc8-b945-4e84-bd00-bda7dc483bea",
+    "chatId": "group",
+    "text": "⚙️ [Queue Worker]: កំពុងដំណើរការ task ពី Queue: \"create file agents\"...",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:36:41.472Z"
+  },
+  {
+    "id": "e7de96e2-9e69-4304-a21d-a62003cbe390",
+    "chatId": "group",
+    "text": "បាទ pro! ខ្ញុំបានបង្កើត file `agents.js` រួចរាល់ហើយ និងបាន update state ក្នុង `.agents/STATE.md` ផងដែរ។\n\n- **File:** `agents.js`\n- **Change:** បានបន្ថែម function `getAgents()` និង `findAgentByName(name)` សម្រាប់ manage និង lookup development agents ใน workspace។\n\nតើ pro ចង់ឱ្យខ្ញុំធ្វើ task អ្វីបន្តទៀត?",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:37:02.055Z"
+  },
+  {
+    "id": "d8be37ec-c1f5-4660-b0a5-4d9b2ede40f9",
+    "chatId": "group",
+    "text": "- **Verdict:** ✅ **Approved (ຜ່ານ)**\n\n- **Code Review & Critique (`agents.js`):**\n  1. **Correctness & Robustness:** Function `findAgentByName(name)` មាន check type (`typeof name !== 'string'`) និង `trim().toLowerCase()` ត្រឹមត្រូវ ការពារ errors ពេល input ผิด type។\n  2. **Code Quality & Readability:** Code ស្អាត មាន JSDoc comments ច្បាស់លាស់ និង export modules ត្រឹមត្រូវតាម Node.js standard។\n  3. **Security:** អត់មាន security issues ទេ (No injection risks, safe data handling)។",
+    "senderName": "QA Reviewer",
+    "senderRole": "Code Quality & Security",
+    "senderId": "033043b3-3250-41ec-b4ae-ba9b4c46484b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:37:13.857Z"
+  },
+  {
+    "id": "26ae37bf-55e3-4a42-b307-435c0896ffd8",
+    "chatId": "group",
+    "text": "delete vinh",
+    "senderName": "You",
+    "isAgent": false,
+    "createdAt": "2026-11-11T18:37:42.900Z"
+  },
+  {
+    "id": "d0af3295-c356-4c39-b293-38bbbc6c1c7c",
+    "chatId": "group",
+    "text": "📋 [Rex]: បានកត់ត្រាការងាររួចរាល់។ កំពុងរៀបចំចាត់ចែងក្នុងក្រុម...",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:37:42.900Z"
+  },
+  {
+    "id": "04705a19-f133-49ef-8bee-4c07e7e46674",
+    "chatId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "text": "he",
+    "senderName": "You",
+    "isAgent": false,
+    "createdAt": "2026-11-11T18:43:58.995Z"
+  },
+  {
+    "id": "70bb950d-29ef-44fe-8e09-3d793ecf4983",
+    "chatId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "text": "[Rex (Lead Orchestrator)]: ខ្ញុំជា Rex (Lead)។ ក្នុង Group Chat ខ្ញុំទទួលភារកិច្ចពីអ្នក ហើយចាត់ចែងដោយស្វ័យប្រវត្តទៅកាន់ @Dev ឬ @QA!",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:43:58.995Z"
+  },
+  {
+    "id": "f994f5df-9122-484b-944d-5569e4b7fc83",
+    "chatId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "text": "mean chat na mk ot?",
+    "senderName": "You",
+    "isAgent": false,
+    "createdAt": "2026-11-11T18:44:15.402Z"
+  },
+  {
+    "id": "08a3ce4c-e04d-4513-852f-d0f7525bbf77",
+    "chatId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "text": "[Rex (Lead Orchestrator)]: ខ្ញុំជា Rex (Lead)។ ក្នុង Group Chat ខ្ញុំទទួលភារកិច្ចពីអ្នក ហើយចាត់ចែងដោយស្វ័យប្រវត្តទៅកាន់ @Dev ឬ @QA!",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:44:15.402Z"
+  },
+  {
+    "id": "849e05a1-7694-4da3-b78a-9b56a41841b6",
+    "chatId": "group",
+    "text": "🌙 [Away Mode Active]: Nha បានកំណត់ស្ថានភាព Away Mode (ចេញក្រៅ)។\n\nRex និង Dev នឹងបន្តទទួល និងដំណើរការ tasks ក្នុង Queue ដោយស្វ័យប្រវត្តិនៅ background។ នៅពេលអ្នកត្រឡប់មកវិញ ពួកយើងនឹងរៀបចំ Resume Briefing សង្ខេបជូនភ្លាមៗ!",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:44:48.158Z"
+  },
+  {
+    "id": "166cf20c-8fb2-4270-b686-7417a245e8ab",
+    "chatId": "group",
+    "text": "🌅 [Resume Briefing]: សូមស្វាគមន៍ការត្រឡប់មកវិញ Nha! 👋\n\nក្នុងកំឡុងពេលអ្នកនៅក្រៅ គ្មាន task ថ្មីក្នុង queue ទេ។ ប្រព័ន្ធបានត្រៀមខ្លួនជាស្រេចសម្រាប់ task បន្ទាប់របស់អ្នក!",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "isBriefing": true,
+    "createdAt": "2026-11-11T18:44:50.415Z"
+  },
+  {
+    "id": "6f78470b-bbfc-4463-aa23-bf2f258cd1a9",
+    "chatId": "group",
+    "text": "🌙 [Away Mode Active]: Nha បានកំណត់ស្ថានភាព Away Mode (ចេញក្រៅ)។\n\nRex និង Dev នឹងបន្តទទួល និងដំណើរការ tasks ក្នុង Queue ដោយស្វ័យប្រវត្តិនៅ background។ នៅពេលអ្នកត្រឡប់មកវិញ ពួកយើងនឹងរៀបចំ Resume Briefing សង្ខេបជូនភ្លាមៗ!",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:44:51.879Z"
   }
 ]

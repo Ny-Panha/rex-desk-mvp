@@ -44,6 +44,7 @@
   - Dev: `c:\Users\nhastar\Desktop\Agent Dev\rex-desk-mvp\backend\workspaces\dev`
   - QA: `c:\Users\nhastar\Desktop\Agent Dev\rex-desk-mvp\backend\workspaces\qa`
 - **Files in Dev Workspace**:
+  - `agents.js` (`getAgents()`, `findAgentByName(name)` with defensive guards)
   - `helper.js` (`formatCurrency(amount, currency)` function)
   - `validator.js` (`validateEmail(email)` function)
 
