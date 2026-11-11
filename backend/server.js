@@ -60,6 +60,7 @@ function seedAgents() {
         name: 'Rex',
         role: 'Lead Orchestrator',
         avatarColor: '#6366f1',
+        engine: 'echo',
         createdAt: now,
       },
       {
@@ -67,6 +68,7 @@ function seedAgents() {
         name: 'Dev',
         role: 'Fullstack Developer',
         avatarColor: '#10b981',
+        engine: 'gemini',
         createdAt: now,
       },
     ];
@@ -103,6 +105,7 @@ app.post('/api/agents', (req, res) => {
     name,
     role,
     avatarColor: AVATAR_PALETTE[Math.floor(Math.random() * AVATAR_PALETTE.length)],
+    engine: req.body.engine || 'echo',
     createdAt: new Date().toISOString(),
   };
   agents.push(newAgent);
@@ -125,7 +128,7 @@ app.get('/api/messages', (req, res) => {
 });
 
 // POST /api/messages — { chatId, text, senderName }
-app.post('/api/messages', (req, res) => {
+app.post('/api/messages', async (req, res) => {
   const { chatId, text, senderName } = req.body;
   if (!chatId || !text || !senderName) {
     return res.status(400).json({ error: 'chatId, text, and senderName are required.' });
@@ -150,8 +153,15 @@ app.post('/api/messages', (req, res) => {
   // 2. Generate agent response(s)
   if (chatId === 'group') {
     // Group chat — every agent responds
+    const history = messages.filter((m) => m.chatId === 'group');
     for (const agent of agents) {
-      const responseText = generateResponse({ agent, prompt: text, chatId });
+      const responseText = await generateResponse({
+        agent,
+        prompt: text,
+        chatId,
+        history,
+        senderName,
+      });
       const agentMsg = {
         id: uuidv4(),
         chatId,
@@ -169,7 +179,14 @@ app.post('/api/messages', (req, res) => {
     // Direct chat — find specific agent
     const agent = agents.find((a) => a.id === chatId);
     if (agent) {
-      const responseText = generateResponse({ agent, prompt: text, chatId });
+      const history = messages.filter((m) => m.chatId === chatId);
+      const responseText = await generateResponse({
+        agent,
+        prompt: text,
+        chatId,
+        history,
+        senderName,
+      });
       const agentMsg = {
         id: uuidv4(),
         chatId,

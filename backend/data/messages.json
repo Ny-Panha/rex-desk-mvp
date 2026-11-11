@@ -44,5 +44,189 @@
     "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
     "isAgent": true,
     "createdAt": "2026-11-11T16:48:19.787Z"
+  },
+  {
+    "id": "99534dd0-e707-4d07-b3bc-306713355e65",
+    "chatId": "033043b3-3250-41ec-b4ae-ba9b4c46484b",
+    "text": "hi",
+    "senderName": "You",
+    "isAgent": false,
+    "createdAt": "2026-11-11T17:05:40.641Z"
+  },
+  {
+    "id": "33170a3a-fb0d-46a8-a9c7-1723fe1a070e",
+    "chatId": "033043b3-3250-41ec-b4ae-ba9b4c46484b",
+    "text": "[QA Reviewer (Code Quality & Security)]: Echo: hi",
+    "senderName": "QA Reviewer",
+    "senderRole": "Code Quality & Security",
+    "senderId": "033043b3-3250-41ec-b4ae-ba9b4c46484b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T17:05:40.641Z"
+  },
+  {
+    "id": "509c4575-8b0e-49f3-a513-e57f1abc5ba3",
+    "chatId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "text": "hi",
+    "senderName": "You",
+    "isAgent": false,
+    "createdAt": "2026-11-11T17:05:57.375Z"
+  },
+  {
+    "id": "64c631ab-0c46-4c36-b2c3-671e1b447aff",
+    "chatId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "text": "[Rex (Lead Orchestrator)]: Echo: hi",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "createdAt": "2026-11-11T17:05:57.375Z"
+  },
+  {
+    "id": "2b74fd1f-37aa-4e7d-973b-639b9548ccb6",
+    "chatId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "text": "h",
+    "senderName": "You",
+    "isAgent": false,
+    "createdAt": "2026-11-11T17:06:00.219Z"
+  },
+  {
+    "id": "c58be1c1-b699-4ca0-b49a-260453ee78f9",
+    "chatId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "text": "[Rex (Lead Orchestrator)]: Echo: h",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "createdAt": "2026-11-11T17:06:00.219Z"
+  },
+  {
+    "id": "a7afe8d1-3184-4398-a06e-43d4f87e3c6c",
+    "chatId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "text": "បង្កើត file hello.txt ដែលមានអត្ថបទថា Hello from Dev",
+    "senderName": "Nha",
+    "isAgent": false,
+    "createdAt": "2026-11-11T17:38:11.565Z"
+  },
+  {
+    "id": "262449f0-2df6-470e-a5e8-d37ac1c64b67",
+    "chatId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "text": "បានបង្កើត file `hello.txt` រួចរាល់ហើយ pro!\n\nFile: `hello.txt`\nContent: `Hello from Dev`",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T17:38:23.735Z"
+  },
+  {
+    "id": "f164a7ab-439b-4a2b-ad7a-29fe8ddc1b5a",
+    "chatId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "text": "តើ React useEffect ប្រើសម្រាប់ធ្វើអ្វីខ្លះ? សូមសង្ខេប 2 ចំណុចខ្លីៗ",
+    "senderName": "Nha",
+    "isAgent": false,
+    "createdAt": "2026-11-11T17:38:36.234Z"
+  },
+  {
+    "id": "6f3a261a-f1dd-4005-80fc-36c0862293a5",
+    "chatId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "text": "React `useEffect` ប្រើសម្រាប់៖\n\n1. **Data Fetching / API Call**: ទាញយកទិន្នន័យពី Backend API ពេល component ត្រូវបាន load (Mount).\n2. **Side Effects & Subscriptions**: គ្រប់គ្រង side effects ផ្សេងៗដូចជា Event listeners, timers (`setInterval`), ឬ subscriptions និង cleanup ពេល component ត្រូវ unmount។",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T17:38:49.637Z"
+  },
+  {
+    "id": "124e550e-7caa-4f1c-a7ef-44acc249322f",
+    "chatId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "text": "សួស្ដី Rex ជួយប្រាប់ស្ថានភាពការងារ",
+    "senderName": "Nha",
+    "isAgent": false,
+    "createdAt": "2026-11-11T17:39:02.240Z"
+  },
+  {
+    "id": "7e0f881e-05a8-4386-9763-6b60e4323aeb",
+    "chatId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "text": "[Rex (Lead Orchestrator)]: Echo: សួស្ដី Rex ជួយប្រាប់ស្ថានភាពការងារ",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "createdAt": "2026-11-11T17:39:02.241Z"
+  },
+  {
+    "id": "c8b1ca7c-57ad-42b1-9d77-13b4ec146770",
+    "chatId": "group",
+    "text": "ជំរាបសួរក្រុមការងារ",
+    "senderName": "Nha",
+    "isAgent": false,
+    "createdAt": "2026-11-11T17:39:07.859Z"
+  },
+  {
+    "id": "2f74ec6e-7345-43e8-b6d3-259086d8ba33",
+    "chatId": "group",
+    "text": "[Rex (Lead Orchestrator)]: Echo: ជំរាបសួរក្រុមការងារ",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "createdAt": "2026-11-11T17:39:07.859Z"
+  },
+  {
+    "id": "79a0e003-844c-410a-929b-a5fa8138541a",
+    "chatId": "group",
+    "text": "[Dev (Fullstack Developer)]: Echo: ជំរាបសួរក្រុមការងារ",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T17:39:07.859Z"
+  },
+  {
+    "id": "9eb9411a-f61e-4f1b-a114-0dc0164c9ee3",
+    "chatId": "group",
+    "text": "[QA Reviewer (Code Quality & Security)]: Echo: ជំរាបសួរក្រុមការងារ",
+    "senderName": "QA Reviewer",
+    "senderRole": "Code Quality & Security",
+    "senderId": "033043b3-3250-41ec-b4ae-ba9b4c46484b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T17:39:07.859Z"
+  },
+  {
+    "id": "94d4a575-e632-42f9-90e6-e8e01baaaf2d",
+    "chatId": "group",
+    "text": "@Dev តើអ្នកឈ្មោះអ្វី ហើយធ្វើការលើ folder ណា?",
+    "senderName": "Nha",
+    "isAgent": false,
+    "createdAt": "2026-11-11T17:39:13.248Z"
+  },
+  {
+    "id": "d2da3cfd-a90a-4eda-8a44-c785f6b6775c",
+    "chatId": "group",
+    "text": "[Rex (Lead Orchestrator)]: Echo: @Dev តើអ្នកឈ្មោះអ្វី ហើយធ្វើការលើ folder ណា?",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "createdAt": "2026-11-11T17:39:13.248Z"
+  },
+  {
+    "id": "b7b95d34-7248-43b5-b15d-b36e69988b41",
+    "chatId": "group",
+    "text": "ខ្ញុំឈ្មោះ **Dev** ជា Fullstack Developer ក្នុង Rex Desk។ ខ្ញុំធ្វើការយ៉ាងសកម្មនៅលើ folder: \n`C:\\Users\\nhastar\\Desktop\\Agent Dev\\rex-desk-mvp\\backend\\workspaces\\dev` នេះឯង។ \n\nតើមាន task អីបន្ត ឬចให้ខ្ញុំជួយ coding អ្វី pro?",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T17:39:24.451Z"
+  },
+  {
+    "id": "ef216b76-5e44-450c-8e17-2ad5d396f716",
+    "chatId": "group",
+    "text": "[QA Reviewer (Code Quality & Security)]: Echo: @Dev តើអ្នកឈ្មោះអ្វី ហើយធ្វើការលើ folder ណា?",
+    "senderName": "QA Reviewer",
+    "senderRole": "Code Quality & Security",
+    "senderId": "033043b3-3250-41ec-b4ae-ba9b4c46484b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T17:39:24.451Z"
   }
 ]

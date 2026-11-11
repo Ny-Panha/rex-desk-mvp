@@ -2,39 +2,34 @@
 
 ## 1. Last Session
 - **Session**: Antigravity IDE
-- **Timestamp**: 2026-11-11T23:50:00+07:00
+- **Timestamp**: 2026-11-12T00:40:00+07:00
 
 ## 2. Summary
 - **Step 1 (Skeleton + Chat UI + Echo Engine) COMPLETE**:
-  - **Backend (`rex-desk-mvp/backend`)**:
-    - Express server running on port `5001`.
-    - JSON file storage in `data/agents.json` and `data/messages.json`.
-    - Pre-seeded 2 default agents: `Rex` (Lead Orchestrator) and `Dev` (Fullstack Developer).
-    - Pluggable Agent Engine in `services/agentEngine.js` with echo response: `[Agent Name (Role)]: Echo: <prompt>`.
-    - Full REST APIs: `GET /api/agents`, `POST /api/agents`, `GET /api/messages?chatId=...`, `POST /api/messages`.
-    - Handled group chat (all agents echo) and direct 1-on-1 chat (target agent echoes).
-  - **Frontend (`rex-desk-mvp/frontend`)**:
-    - React + Vite + Tailwind CSS v4 + Lucide React on port `5173`.
-    - Left Sidebar: App title with Active indicator, Group Chat room, agent list with colored avatars and role badges, and "+ Add Agent" modal.
-    - Main Chat Panel: Active chat header, scrollable message feed (auto-scroll), distinct user vs agent bubbles with role tags and timestamps.
-    - Message input bar with Enter-to-send support.
-    - Configured `/api` proxy in `vite.config.js` pointing to `http://localhost:5001`.
-  - **Tested & Verified**:
-    - `GET /api/agents` returns active agents.
-    - `POST /api/agents` successfully created a new agent (`QA Reviewer`).
-    - `POST /api/messages` tested on group chat (both Rex and Dev echoed back).
-    - `POST /api/messages` tested on 1-on-1 chat with Dev.
-    - Frontend serves 200 OK on `http://localhost:5173` and talks to backend via proxy.
+  - Express backend (port 5001) + React Vite frontend (port 5173).
+  - Seeded agents (Rex, Dev) with JSON storage.
+- **Step 2 (Wire ONE Real Agent — Dev via Gemini CLI) COMPLETE**:
+  - Created sandbox folder `backend/workspaces/dev/` (.gitkeep). Dev works strictly inside this folder.
+  - Added Gemini CLI runner in `backend/services/agentEngine.js`:
+    - Spawns Gemini CLI in headless mode (`--skip-trust`, `-y`, `-m gemini-3.5-flash-lite`, `-p Dev:`, stdin prompt stream).
+    - Working directory set to `backend/workspaces/dev/`.
+    - Prompt includes role instruction + last 10 messages conversation context + user message.
+    - Timeout: 120s with visible error message (`⚠️ Gemini CLI error: <first line>`).
+    - Dev runs Gemini engine on 1-on-1 chat and in group chat ONLY when tagged with `@Dev`.
+  - Added `"engine"` field to `agents.json` (`Rex: "echo"`, `Dev: "gemini"`, default `"echo"`).
+  - **Verified**:
+    - (a) Dev created `backend/workspaces/dev/hello.txt` with content `Hello from Dev`.
+    - (b) Dev answered real conceptual questions about React `useEffect` (NOT an echo).
+    - (c) Rex and other agents still echo. Group chat responds to `@Dev` with real Gemini engine while other agents echo.
 
 ## 3. Active Environment
 - **GitHub Repository**: https://github.com/Ny-Panha/rex-desk-mvp
-- **Backend API**: `http://localhost:5001` (Node.js Express)
+- **Backend API**: `http://localhost:5001` (Node.js Express + Gemini CLI runner)
 - **Frontend UI**: `http://localhost:5173` (Vite + React)
+- **Dev Sandbox Directory**: `c:\Users\nhastar\Desktop\Agent Dev\rex-desk-mvp\backend\workspaces\dev`
 - **Data Stores**:
   - `rex-desk-mvp/backend/data/agents.json`
   - `rex-desk-mvp/backend/data/messages.json`
 
 ## 4. Next Steps
-- Open `http://localhost:5173` in browser to view and take screenshot for verification.
-- Proceed to **Step 2 — Agent ពិតមួយ (Dev)**: backend spawn Gemini CLI ជា subprocess ក្នុង sandbox folder របស់ agent, stream ចម្លើយចូល chat។
-
+- **Step 3 — Lead (Rex) routing**: Agent ប្រធាន (Rex) ទទួលសារអ្នក → សម្រេចចាត់ការឱ្យ agent ណា (ចាប់ផ្ដើមពី @mention / rule សាមញ្ញមុន) → post ការងារចូល group chat។
