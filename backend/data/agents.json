@@ -4,7 +4,7 @@
     "name": "Rex",
     "role": "Lead Orchestrator",
     "avatarColor": "#6366f1",
-    "engine": "echo",
+    "engine": "lead",
     "createdAt": "2026-11-11T16:44:44.768Z"
   },
   {

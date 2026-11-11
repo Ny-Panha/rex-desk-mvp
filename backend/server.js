@@ -7,7 +7,7 @@ const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
-const { generateResponse } = require('./services/agentEngine');
+const { generateResponse, leadRoute } = require('./services/agentEngine');
 
 const app = express();
 const PORT = 5001;
@@ -60,7 +60,7 @@ function seedAgents() {
         name: 'Rex',
         role: 'Lead Orchestrator',
         avatarColor: '#6366f1',
-        engine: 'echo',
+        engine: 'lead',
         createdAt: now,
       },
       {
@@ -152,28 +152,99 @@ app.post('/api/messages', async (req, res) => {
 
   // 2. Generate agent response(s)
   if (chatId === 'group') {
-    // Group chat — every agent responds
     const history = messages.filter((m) => m.chatId === 'group');
-    for (const agent of agents) {
-      const responseText = await generateResponse({
-        agent,
-        prompt: text,
-        chatId,
-        history,
-        senderName,
-      });
-      const agentMsg = {
+
+    // Find Lead agent (Rex)
+    const leadAgent =
+      agents.find((a) => a.engine === 'lead') ||
+      agents.find((a) => a.name === 'Rex');
+
+    if (leadAgent) {
+      // 1. Rex routes the task
+      const routing = leadRoute(text);
+      const rexMsg = {
         id: uuidv4(),
-        chatId,
-        text: responseText,
-        senderName: agent.name,
-        senderRole: agent.role,
-        senderId: agent.id,
+        chatId: 'group',
+        text: routing.text,
+        senderName: leadAgent.name,
+        senderRole: leadAgent.role,
+        senderId: leadAgent.id,
         isAgent: true,
         createdAt: new Date().toISOString(),
       };
-      messages.push(agentMsg);
-      newMessages.push(agentMsg);
+      messages.push(rexMsg);
+      newMessages.push(rexMsg);
+
+      // 2. If Rex routes to Dev (or user explicitly tagged @Dev):
+      if (routing.target === 'Dev' || /@dev\b/i.test(text)) {
+        const devAgent =
+          agents.find((a) => a.name === 'Dev') ||
+          agents.find((a) => a.engine === 'gemini');
+
+        if (devAgent) {
+          const updatedHistory = [...history, userMsg, rexMsg];
+          const devResponseText = await generateResponse({
+            agent: devAgent,
+            prompt: text,
+            chatId: 'group',
+            history: updatedHistory,
+            senderName,
+            forceEngine: true,
+          });
+
+          const devMsg = {
+            id: uuidv4(),
+            chatId: 'group',
+            text: devResponseText,
+            senderName: devAgent.name,
+            senderRole: devAgent.role,
+            senderId: devAgent.id,
+            isAgent: true,
+            createdAt: new Date().toISOString(),
+          };
+          messages.push(devMsg);
+          newMessages.push(devMsg);
+        }
+      } else if (routing.target === 'QA Reviewer' || /@qa\b/i.test(text)) {
+        const qaAgent = agents.find((a) => a.name === 'QA Reviewer');
+        if (qaAgent) {
+          const qaMsg = {
+            id: uuidv4(),
+            chatId: 'group',
+            text: `[QA Reviewer (Code Quality & Security)]: ខ្ញុំបានទទួលការងារពី Rex! ខ្ញុំកំពុងរៀបចំពិនិត្យមើល...`,
+            senderName: qaAgent.name,
+            senderRole: qaAgent.role,
+            senderId: qaAgent.id,
+            isAgent: true,
+            createdAt: new Date().toISOString(),
+          };
+          messages.push(qaMsg);
+          newMessages.push(qaMsg);
+        }
+      }
+    } else {
+      // Fallback
+      for (const agent of agents) {
+        const responseText = await generateResponse({
+          agent,
+          prompt: text,
+          chatId,
+          history,
+          senderName,
+        });
+        const agentMsg = {
+          id: uuidv4(),
+          chatId,
+          text: responseText,
+          senderName: agent.name,
+          senderRole: agent.role,
+          senderId: agent.id,
+          isAgent: true,
+          createdAt: new Date().toISOString(),
+        };
+        messages.push(agentMsg);
+        newMessages.push(agentMsg);
+      }
     }
   } else {
     // Direct chat — find specific agent
