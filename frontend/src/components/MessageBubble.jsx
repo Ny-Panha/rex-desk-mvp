@@ -1,4 +1,4 @@
-import { ShieldAlert, Check, X, Lock } from 'lucide-react'
+import { ShieldAlert, Check, X, Sun } from 'lucide-react'
 
 export default function MessageBubble({ message, onResolveApproval }) {
   const isAgent = message.isAgent
@@ -10,6 +10,36 @@ export default function MessageBubble({ message, onResolveApproval }) {
     : ''
 
   if (isAgent) {
+    // Resume Briefing Card rendering
+    if (message.isBriefing) {
+      return (
+        <div className="flex justify-start">
+          <div className="max-w-[85%] sm:max-w-[75%]">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <span className="text-xs font-medium text-amber-300">
+                {message.senderName}
+              </span>
+              <span className="text-[10px] text-amber-400/80 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
+                Resume Briefing
+              </span>
+            </div>
+            <div className="bg-gradient-to-br from-indigo-950/40 via-slate-900 to-amber-950/20 border-2 border-indigo-500/40 rounded-xl p-4 shadow-lg shadow-indigo-500/5">
+              <div className="flex items-center gap-2 text-indigo-300 font-semibold text-xs tracking-wide uppercase border-b border-indigo-500/20 pb-2 mb-2.5">
+                <Sun size={16} className="text-amber-400 stroke-[2.2]" />
+                <span>Morning / Resume Briefing</span>
+              </div>
+              <p className="text-sm text-slate-100 whitespace-pre-wrap leading-relaxed">
+                {message.text}
+              </p>
+            </div>
+            {time && (
+              <p className="text-[10px] text-slate-600 mt-1 ml-1">{time}</p>
+            )}
+          </div>
+        </div>
+      )
+    }
+
     // Approval Gate Card rendering
     if (message.isApproval) {
       const data = message.approvalData || {}

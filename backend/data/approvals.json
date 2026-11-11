@@ -24,5 +24,31 @@
     "status": "approved",
     "createdAt": "2026-11-11T18:10:26.112Z",
     "resolvedAt": "2026-11-11T18:10:32.325Z"
+  },
+  {
+    "id": "f013217d-ea41-463f-964d-09cb0d7f98d7",
+    "actionType": "git_push",
+    "title": "Git Push to GitHub",
+    "description": "Dev requests permission to execute \"git push origin main\" to update the remote repository.",
+    "payload": {
+      "command": "git push origin main"
+    },
+    "chatId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "status": "approved",
+    "createdAt": "2026-11-11T18:16:03.533Z",
+    "resolvedAt": "2026-11-11T18:16:05.815Z"
+  },
+  {
+    "id": "411f19a3-15a9-46cd-815d-538d2e8d893a",
+    "actionType": "file_delete",
+    "title": "Delete File: hello.txt",
+    "description": "Dev requests permission to permanently delete file \"hello.txt\" from backend/workspaces/dev/.",
+    "payload": {
+      "fileName": "hello.txt"
+    },
+    "chatId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "status": "approved",
+    "createdAt": "2026-11-11T18:16:26.889Z",
+    "resolvedAt": "2026-11-11T18:16:28.887Z"
   }
 ]

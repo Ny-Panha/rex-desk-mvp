@@ -24,6 +24,157 @@ const DATA_DIR = path.join(__dirname, 'data');
 const AGENTS_FILE = path.join(DATA_DIR, 'agents.json');
 const MESSAGES_FILE = path.join(DATA_DIR, 'messages.json');
 const APPROVALS_FILE = path.join(DATA_DIR, 'approvals.json');
+const JOBS_FILE = path.join(DATA_DIR, 'jobs.json');
+const AWAY_FILE = path.join(DATA_DIR, 'away.json');
+
+function getAwayState() {
+  try {
+    if (!fs.existsSync(AWAY_FILE)) {
+      const initial = { isAway: false, awaySince: null, completedWhileAway: [] };
+      writeJSON(AWAY_FILE, initial);
+      return initial;
+    }
+    return readJSON(AWAY_FILE);
+  } catch {
+    return { isAway: false, awaySince: null, completedWhileAway: [] };
+  }
+}
+
+function setAwayState(state) {
+  writeJSON(AWAY_FILE, state);
+}
+
+// ---------------------------------------------------------------------------
+// Background Queue Worker (Step 6: Away Mode-lite)
+// ---------------------------------------------------------------------------
+
+let isProcessingQueue = false;
+
+async function triggerQueueProcessing() {
+  if (isProcessingQueue) return;
+  isProcessingQueue = true;
+
+  try {
+    while (true) {
+      const jobs = readJSON(JOBS_FILE);
+      const nextJob = jobs.find((j) => j.status === 'pending');
+      if (!nextJob) break;
+
+      // Mark job running
+      nextJob.status = 'running';
+      writeJSON(JOBS_FILE, jobs);
+
+      // Announce in group chat that worker picked up job
+      const agents = readJSON(AGENTS_FILE);
+      const devAgent = agents.find((a) => a.name === 'Dev') || agents[0];
+      const messages = readJSON(MESSAGES_FILE);
+
+      const startMsg = {
+        id: uuidv4(),
+        chatId: 'group',
+        text: `⚙️ [Queue Worker]: កំពុងដំណើរការ task ពី Queue: "${nextJob.task}"...`,
+        senderName: devAgent.name,
+        senderRole: devAgent.role,
+        senderId: devAgent.id,
+        isAgent: true,
+        createdAt: new Date().toISOString(),
+      };
+      messages.push(startMsg);
+      writeJSON(MESSAGES_FILE, messages);
+
+      // Run Dev response via Gemini CLI
+      const history = messages.filter((m) => m.chatId === 'group');
+      let resultText = '';
+      try {
+        resultText = await generateResponse({
+          agent: devAgent,
+          prompt: nextJob.task,
+          chatId: 'group',
+          history,
+          senderName: 'Queue Worker',
+          forceEngine: true,
+        });
+      } catch (err) {
+        resultText = `Error processing queue task: ${err.message}`;
+      }
+
+      // Mark job completed
+      const updatedJobs = readJSON(JOBS_FILE);
+      const currentJob = updatedJobs.find((j) => j.id === nextJob.id);
+      if (currentJob) {
+        currentJob.status = 'completed';
+        currentJob.result = resultText;
+        currentJob.completedAt = new Date().toISOString();
+        writeJSON(JOBS_FILE, updatedJobs);
+      }
+
+      // Append completion message to group chat
+      const updatedMessages = readJSON(MESSAGES_FILE);
+      const finishMsg = {
+        id: uuidv4(),
+        chatId: 'group',
+        text: resultText,
+        senderName: devAgent.name,
+        senderRole: devAgent.role,
+        senderId: devAgent.id,
+        isAgent: true,
+        createdAt: new Date().toISOString(),
+      };
+      updatedMessages.push(finishMsg);
+      writeJSON(MESSAGES_FILE, updatedMessages);
+
+      // If QA Reviewer exists and Dev changed code, run QA review
+      const qaAgent = agents.find((a) => a.name === 'QA Reviewer');
+      if (qaAgent) {
+        const devDiff = getDevWorkspaceDiff();
+        if (devDiff && devDiff.trim().length > 0) {
+          try {
+            const qaResponse = await generateResponse({
+              agent: qaAgent,
+              prompt: `Review recent code for queue task: "${nextJob.task}"`,
+              chatId: 'group',
+              history: [...updatedMessages, finishMsg],
+              senderName: 'System',
+              forceEngine: true,
+              reviewContext: devDiff,
+            });
+            const qaMsg = {
+              id: uuidv4(),
+              chatId: 'group',
+              text: qaResponse,
+              senderName: qaAgent.name,
+              senderRole: qaAgent.role,
+              senderId: qaAgent.id,
+              isAgent: true,
+              createdAt: new Date().toISOString(),
+            };
+            const finalMsgs = readJSON(MESSAGES_FILE);
+            finalMsgs.push(qaMsg);
+            writeJSON(MESSAGES_FILE, finalMsgs);
+          } catch (qaErr) {
+            console.error('QA queue review error:', qaErr);
+          }
+        }
+      }
+
+      // If away mode is active, record in completedWhileAway
+      const away = getAwayState();
+      if (away.isAway) {
+        away.completedWhileAway.push({
+          jobId: nextJob.id,
+          task: nextJob.task,
+          agent: devAgent.name,
+          completedAt: new Date().toISOString(),
+        });
+        setAwayState(away);
+      }
+    }
+  } catch (err) {
+    console.error('Queue processing error:', err);
+  } finally {
+    isProcessingQueue = false;
+  }
+}
 
 function detectCriticalAction(text) {
   const t = (text || '').toLowerCase();
@@ -123,6 +274,16 @@ function seedAgents() {
   // Ensure approvals file exists
   if (!fs.existsSync(APPROVALS_FILE)) {
     writeJSON(APPROVALS_FILE, []);
+  }
+
+  // Ensure jobs file exists
+  if (!fs.existsSync(JOBS_FILE)) {
+    writeJSON(JOBS_FILE, []);
+  }
+
+  // Ensure away file exists
+  if (!fs.existsSync(AWAY_FILE)) {
+    writeJSON(AWAY_FILE, { isAway: false, awaySince: null, completedWhileAway: [] });
   }
 }
 
@@ -235,6 +396,42 @@ app.post('/api/messages', async (req, res) => {
     return res.status(201).json(newMessages);
   }
 
+  // Check for /queue command (Step 6: Away Mode-lite)
+  if (/^\/queue\s+/i.test(text) || /^queue:\s+/i.test(text)) {
+    const taskText = text.replace(/^\/queue\s+|^queue:\s+/i, '').trim();
+    const jobs = readJSON(JOBS_FILE);
+    const newJob = {
+      id: uuidv4(),
+      task: taskText,
+      targetAgent: 'Dev',
+      status: 'pending',
+      result: null,
+      createdAt: new Date().toISOString(),
+      completedAt: null,
+    };
+    jobs.push(newJob);
+    writeJSON(JOBS_FILE, jobs);
+
+    const leadAgent = agents.find((a) => a.name === 'Rex') || agents[0];
+    const queueConfirmMsg = {
+      id: uuidv4(),
+      chatId,
+      text: `📋 [Job Queued]: Task "${taskText}" ត្រូវបានបន្ថែមទៅក្នុង Background Queue ដោយជោគជ័យ! Rex & Dev នឹងដំណើរការ task នេះនៅ background។`,
+      senderName: leadAgent.name,
+      senderRole: leadAgent.role,
+      senderId: leadAgent.id,
+      isAgent: true,
+      createdAt: new Date().toISOString(),
+    };
+    messages.push(queueConfirmMsg);
+    newMessages.push(queueConfirmMsg);
+    writeJSON(MESSAGES_FILE, messages);
+
+    // Run queue in background
+    triggerQueueProcessing();
+    return res.status(201).json(newMessages);
+  }
+
   // 2. Generate agent response(s)
   if (chatId === 'group') {
     const history = messages.filter((m) => m.chatId === 'group');
@@ -289,6 +486,17 @@ app.post('/api/messages', async (req, res) => {
           };
           messages.push(devMsg);
           newMessages.push(devMsg);
+
+          // Track in away mode if active
+          const currentAway = getAwayState();
+          if (currentAway.isAway) {
+            currentAway.completedWhileAway.push({
+              task: text,
+              agent: devAgent.name,
+              completedAt: new Date().toISOString(),
+            });
+            setAwayState(currentAway);
+          }
 
           // 3. QA Reviewer chain: automatically inspect Dev's diff and review in group chat
           const qaAgent = agents.find((a) => a.name === 'QA Reviewer');
@@ -496,6 +704,113 @@ app.post('/api/approvals/:id/resolve', (req, res) => {
     approval,
     message: resolutionMsg,
   });
+});
+
+// ---------------------------------------------------------------------------
+// Routes – Jobs Queue & Away Mode (Step 6)
+// ---------------------------------------------------------------------------
+
+// GET /api/jobs — list all jobs in queue
+app.get('/api/jobs', (_req, res) => {
+  const jobs = readJSON(JOBS_FILE);
+  res.json(jobs);
+});
+
+// POST /api/jobs — enqueue a new background job
+app.post('/api/jobs', (req, res) => {
+  const { task, targetAgent } = req.body;
+  if (!task || !task.trim()) {
+    return res.status(400).json({ error: 'task is required.' });
+  }
+
+  const jobs = readJSON(JOBS_FILE);
+  const newJob = {
+    id: uuidv4(),
+    task: task.trim(),
+    targetAgent: targetAgent || 'Dev',
+    status: 'pending',
+    result: null,
+    createdAt: new Date().toISOString(),
+    completedAt: null,
+  };
+  jobs.push(newJob);
+  writeJSON(JOBS_FILE, jobs);
+
+  // Trigger background queue runner
+  triggerQueueProcessing();
+
+  res.status(201).json(newJob);
+});
+
+// GET /api/away — get current away mode status
+app.get('/api/away', (_req, res) => {
+  const away = getAwayState();
+  res.json(away);
+});
+
+// POST /api/away/toggle — toggle away mode ON or OFF
+app.post('/api/away/toggle', async (req, res) => {
+  const { isAway } = req.body;
+  const away = getAwayState();
+  const messages = readJSON(MESSAGES_FILE);
+  const agents = readJSON(AGENTS_FILE);
+  const rexAgent = agents.find((a) => a.name === 'Rex') || agents[0];
+
+  if (isAway) {
+    away.isAway = true;
+    away.awaySince = new Date().toISOString();
+    away.completedWhileAway = [];
+    setAwayState(away);
+
+    const awayMsg = {
+      id: uuidv4(),
+      chatId: 'group',
+      text: `🌙 [Away Mode Active]: Nha បានកំណត់ស្ថានភាព Away Mode (ចេញក្រៅ)។\n\nRex និង Dev នឹងបន្តទទួល និងដំណើរការ tasks ក្នុង Queue ដោយស្វ័យប្រវត្តិនៅ background។ នៅពេលអ្នកត្រឡប់មកវិញ ពួកយើងនឹងរៀបចំ Resume Briefing សង្ខេបជូនភ្លាមៗ!`,
+      senderName: rexAgent.name,
+      senderRole: rexAgent.role,
+      senderId: rexAgent.id,
+      isAgent: true,
+      createdAt: new Date().toISOString(),
+    };
+    messages.push(awayMsg);
+    writeJSON(MESSAGES_FILE, messages);
+
+    return res.json({ success: true, away, message: awayMsg });
+  } else {
+    // Return / Resume Briefing
+    const completedItems = away.completedWhileAway || [];
+    let briefingText = '';
+
+    if (completedItems.length > 0) {
+      const taskList = completedItems
+        .map((item, idx) => `  ${idx + 1}. ✅ **${item.task}** (ដោយ ${item.agent || 'Dev'})`)
+        .join('\n');
+      briefingText = `🌅 [Resume Briefing]: សូមស្វាគមន៍ការត្រឡប់មកវិញ Nha! 👋\n\nខណៈពេលអ្នកនៅក្រៅ ពួកយើងបានបំពេញការងារចំនួន ${completedItems.length} tasks ដោយស្វ័យប្រវត្តិ:\n${taskList}\n\n📂 Workspaces ត្រូវបាន update រួចរាល់។ តើអ្នកចង់ឱ្យពួកយើងធ្វើអ្វីបន្តទៀត pro?`;
+    } else {
+      briefingText = `🌅 [Resume Briefing]: សូមស្វាគមន៍ការត្រឡប់មកវិញ Nha! 👋\n\nក្នុងកំឡុងពេលអ្នកនៅក្រៅ គ្មាន task ថ្មីក្នុង queue ទេ។ ប្រព័ន្ធបានត្រៀមខ្លួនជាស្រេចសម្រាប់ task បន្ទាប់របស់អ្នក!`;
+    }
+
+    const resumeMsg = {
+      id: uuidv4(),
+      chatId: 'group',
+      text: briefingText,
+      senderName: rexAgent.name,
+      senderRole: rexAgent.role,
+      senderId: rexAgent.id,
+      isAgent: true,
+      isBriefing: true,
+      createdAt: new Date().toISOString(),
+    };
+    messages.push(resumeMsg);
+    writeJSON(MESSAGES_FILE, messages);
+
+    away.isAway = false;
+    away.awaySince = null;
+    away.completedWhileAway = [];
+    setAwayState(away);
+
+    return res.json({ success: true, away, message: resumeMsg });
+  }
 });
 
 // ---------------------------------------------------------------------------

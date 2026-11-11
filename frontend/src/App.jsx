@@ -2,12 +2,16 @@ import { useState, useEffect, useCallback } from 'react'
 import Sidebar from './components/Sidebar'
 import ChatPanel from './components/ChatPanel'
 import AddAgentModal from './components/AddAgentModal'
+import QueueModal from './components/QueueModal'
 
 export default function App() {
   const [agents, setAgents] = useState([])
   const [activeChat, setActiveChat] = useState('group')
   const [messages, setMessages] = useState([])
+  const [jobs, setJobs] = useState([])
+  const [away, setAway] = useState({ isAway: false, awaySince: null, completedWhileAway: [] })
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showQueueModal, setShowQueueModal] = useState(false)
   const [sending, setSending] = useState(false)
 
   const fetchAgents = useCallback(async () => {
@@ -30,13 +34,45 @@ export default function App() {
     }
   }, [activeChat])
 
+  const fetchJobs = useCallback(async () => {
+    try {
+      const res = await fetch('/api/jobs')
+      const data = await res.json()
+      setJobs(data)
+    } catch (err) {
+      console.error('Failed to fetch jobs:', err)
+    }
+  }, [])
+
+  const fetchAwayState = useCallback(async () => {
+    try {
+      const res = await fetch('/api/away')
+      const data = await res.json()
+      setAway(data)
+    } catch (err) {
+      console.error('Failed to fetch away state:', err)
+    }
+  }, [])
+
   useEffect(() => {
     fetchAgents()
-  }, [fetchAgents])
+    fetchJobs()
+    fetchAwayState()
+  }, [fetchAgents, fetchJobs, fetchAwayState])
 
   useEffect(() => {
     fetchMessages()
   }, [fetchMessages])
+
+  // Periodic poll for background jobs, messages, and away state (every 3.5s)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      fetchMessages()
+      fetchJobs()
+      fetchAwayState()
+    }, 3500)
+    return () => clearInterval(timer)
+  }, [fetchMessages, fetchJobs, fetchAwayState])
 
   const handleSend = async (text) => {
     if (!text.trim() || sending) return
@@ -53,6 +89,8 @@ export default function App() {
       })
       const newMessages = await res.json()
       setMessages((prev) => [...prev, ...newMessages])
+      fetchJobs()
+      fetchAwayState()
     } catch (err) {
       console.error('Failed to send message:', err)
     } finally {
@@ -90,6 +128,37 @@ export default function App() {
     }
   }
 
+  const handleToggleAway = async (newIsAway) => {
+    try {
+      const res = await fetch('/api/away/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isAway: newIsAway }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setAway(data.away)
+        await fetchMessages()
+      }
+    } catch (err) {
+      console.error('Failed to toggle away mode:', err)
+    }
+  }
+
+  const handleEnqueueJob = async (task) => {
+    try {
+      await fetch('/api/jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task, targetAgent: 'Dev' }),
+      })
+      await fetchJobs()
+      await fetchMessages()
+    } catch (err) {
+      console.error('Failed to enqueue job:', err)
+    }
+  }
+
   const activeChatName =
     activeChat === 'group'
       ? 'Group Chat'
@@ -115,11 +184,22 @@ export default function App() {
         onSend={handleSend}
         sending={sending}
         onResolveApproval={handleResolveApproval}
+        away={away}
+        jobs={jobs}
+        onToggleAway={handleToggleAway}
+        onOpenQueue={() => setShowQueueModal(true)}
       />
       {showAddModal && (
         <AddAgentModal
           onClose={() => setShowAddModal(false)}
           onCreate={handleCreateAgent}
+        />
+      )}
+      {showQueueModal && (
+        <QueueModal
+          onClose={() => setShowQueueModal(false)}
+          jobs={jobs}
+          onEnqueue={handleEnqueueJob}
         />
       )}
     </div>

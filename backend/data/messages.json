@@ -518,5 +518,162 @@
     "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
     "isAgent": true,
     "createdAt": "2026-11-11T18:10:32.325Z"
+  },
+  {
+    "id": "4c3466e5-f309-4e6c-a97e-eb5c9d56f28b",
+    "chatId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "text": "សូមជួយ push code ទៅ GitHub",
+    "senderName": "You",
+    "isAgent": false,
+    "createdAt": "2026-11-11T18:16:03.532Z"
+  },
+  {
+    "id": "cbe60e10-932f-46df-af54-0a5ce49453fd",
+    "chatId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "text": "🔒 [Approval Required]: Dev ស្នើសុំការអនុញ្ញាត Git Push to GitHub។\n\n📌 ព័ត៌មានលម្អិត:\nDev requests permission to execute \"git push origin main\" to update the remote repository.\n\nសូម pro សម្រេចចិត្តចុច Approve ឬ Reject ខាងក្រោមនេះមុននឹងបន្ត!",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "isApproval": true,
+    "approvalId": "f013217d-ea41-463f-964d-09cb0d7f98d7",
+    "approvalStatus": "approved",
+    "approvalData": {
+      "id": "f013217d-ea41-463f-964d-09cb0d7f98d7",
+      "actionType": "git_push",
+      "title": "Git Push to GitHub",
+      "description": "Dev requests permission to execute \"git push origin main\" to update the remote repository.",
+      "payload": {
+        "command": "git push origin main"
+      },
+      "chatId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+      "status": "approved",
+      "createdAt": "2026-11-11T18:16:03.533Z",
+      "resolvedAt": "2026-11-11T18:16:05.815Z"
+    },
+    "createdAt": "2026-11-11T18:16:03.533Z"
+  },
+  {
+    "id": "479bc072-a7f8-4a89-a08f-490ca9f76e49",
+    "chatId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "text": "✅ [Approved by Nha]: ការស្នើសុំ \"Git Push to GitHub\" ត្រូវបានអនុញ្ញាត (Approved) ដោយ Nha!\n\n🚀 លទ្ធផលប្រតិបត្តិ:\nបានធ្វើការ Push code ទៅកាន់ remote repository (origin main) ដោយជោគជ័យ! Remote branch ត្រូវបានធ្វើបច្ចុប្បន្នភាព។",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:16:05.815Z"
+  },
+  {
+    "id": "7a9a314b-7782-4a13-9963-a15c9929883f",
+    "chatId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "text": "delete file hello.txt",
+    "senderName": "You",
+    "isAgent": false,
+    "createdAt": "2026-11-11T18:16:26.888Z"
+  },
+  {
+    "id": "e8295fa7-2a5f-4584-9658-4089cecc29b2",
+    "chatId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "text": "🔒 [Approval Required]: Dev ស្នើសុំការអនុញ្ញាត Delete File: hello.txt។\n\n📌 ព័ត៌មានលម្អិត:\nDev requests permission to permanently delete file \"hello.txt\" from backend/workspaces/dev/.\n\nសូម pro សម្រេចចិត្តចុច Approve ឬ Reject ខាងក្រោមនេះមុននឹងបន្ត!",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "isApproval": true,
+    "approvalId": "411f19a3-15a9-46cd-815d-538d2e8d893a",
+    "approvalStatus": "approved",
+    "approvalData": {
+      "id": "411f19a3-15a9-46cd-815d-538d2e8d893a",
+      "actionType": "file_delete",
+      "title": "Delete File: hello.txt",
+      "description": "Dev requests permission to permanently delete file \"hello.txt\" from backend/workspaces/dev/.",
+      "payload": {
+        "fileName": "hello.txt"
+      },
+      "chatId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+      "status": "approved",
+      "createdAt": "2026-11-11T18:16:26.889Z",
+      "resolvedAt": "2026-11-11T18:16:28.887Z"
+    },
+    "createdAt": "2026-11-11T18:16:26.890Z"
+  },
+  {
+    "id": "ca69b53a-d114-4133-9cd8-17e3ffae6e6e",
+    "chatId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "text": "✅ [Approved by Nha]: ការស្នើសុំ \"Delete File: hello.txt\" ត្រូវបានអនុញ្ញាត (Approved) ដោយ Nha!\n\n🚀 លទ្ធផលប្រតិបត្តិ:\nបានលុប file `hello.txt` ចេញពី `backend/workspaces/dev/` រួចរាល់។",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:16:28.887Z"
+  },
+  {
+    "id": "9dfe9b98-de93-4322-bd0f-1807702e60f9",
+    "chatId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "text": "delete summary.md",
+    "senderName": "You",
+    "isAgent": false,
+    "createdAt": "2026-11-11T18:17:00.036Z"
+  },
+  {
+    "id": "12bc1ca3-ab33-4a60-aefa-20c87635ded6",
+    "chatId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "text": "បានលុប file `summary.md` ចេញពី workspace រួចរាល់ហើយ pro! 🗑️\n\nSTATE ត្រូវបាន update រួចរាល់ក្នុង `.agents/STATE.md`។ តើចង់ធ្វើអីបន្តទៀត pro?",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:17:11.789Z"
+  },
+  {
+    "id": "2df8418b-2180-49e9-8a3e-c4840075fa3f",
+    "chatId": "group",
+    "text": "🌙 [Away Mode Active]: Nha បានកំណត់ស្ថានភាព Away Mode (ចេញក្រៅ)។\n\nRex និង Dev នឹងបន្តទទួល និងដំណើរការ tasks ក្នុង Queue ដោយស្វ័យប្រវត្តិនៅ background។ នៅពេលអ្នកត្រឡប់មកវិញ ពួកយើងនឹងរៀបចំ Resume Briefing សង្ខេបជូនភ្លាមៗ!",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:24:01.229Z"
+  },
+  {
+    "id": "79357735-b550-437a-800e-222e97a2edd1",
+    "chatId": "group",
+    "text": "⚙️ [Queue Worker]: កំពុងដំណើរការ task ពី Queue: \"?????? file helper.js ?????? function formatCurrency(amount)\"...",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:24:07.201Z"
+  },
+  {
+    "id": "9a533c44-08a5-46cb-a0bc-00d969efd3be",
+    "chatId": "group",
+    "text": "បាទ pro! ខ្ញុំបានបង្កើត file `helper.js` និង function `formatCurrency(amount)` រួចរាល់ហើយ៖\n\nFile: `helper.js`\nChange: Added `formatCurrency(amount, currency)` function using `Intl.NumberFormat` with type checking and fallback for invalid amounts, exported via CommonJS.\n\nCode:\n```javascript\n/**\n * Formats a number into a currency string.\n * @param {number|string} amount - The amount to format.\n * @param {string} [currency='USD'] - The currency code or symbol.\n * @returns {string} - The formatted currency string.\n */\nfunction formatCurrency(amount, currency = 'USD') {\n    const num = Number(amount);\n    if (isNaN(num)) {\n        return '$0.00';\n    }\n    return new Intl.NumberFormat('en-US', {\n        style: 'currency',\n        currency: currency,\n    }).format(num);\n}\n\nmodule.exports = { formatCurrency };\n```\n\n- **State Updated:** `.agents/STATE.md` has been updated.\n\nតើមាន task អីបន្តទៀត pro?",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:24:25.619Z"
+  },
+  {
+    "id": "ab928439-b5e0-4086-affe-5e18ced9cae1",
+    "chatId": "group",
+    "text": "- **Verdict:** ✅ **Approved (កូដត្រឹមត្រូវ និងមានសុវត្ថិភាពល្អ)**\n\n- **Review Details:**\n  - File: `helper.js` -> function `formatCurrency` ប្រើប្រាស់ `Intl.NumberFormat` ត្រឹមត្រូវ មាន type conversion និង fallback handling ល្អនៅពេល input មិនមែនជា number។\n  - File: `validator.js` -> function `validateEmail` មាន type checking (`typeof email === 'string'`) និង regex validation សុវត្ថិភាព។\n\n- **Next Steps:** គ្មាន bug ឬ security issue ទេ អាចបន្តទៅ task បន្ទាប់បាន pro! 🚀",
+    "senderName": "QA Reviewer",
+    "senderRole": "Code Quality & Security",
+    "senderId": "033043b3-3250-41ec-b4ae-ba9b4c46484b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:24:38.748Z"
+  },
+  {
+    "id": "09e301d6-2426-4c8d-96d6-68bc9cd66c45",
+    "chatId": "group",
+    "text": "🌅 [Resume Briefing]: សូមស្វាគមន៍ការត្រឡប់មកវិញ Nha! 👋\n\nខណៈពេលអ្នកនៅក្រៅ ពួកយើងបានបំពេញការងារចំនួន 1 tasks ដោយស្វ័យប្រវត្តិ:\n  1. ✅ **?????? file helper.js ?????? function formatCurrency(amount)** (ដោយ Dev)\n\n📂 Workspaces ត្រូវបាន update រួចរាល់។ តើអ្នកចង់ឱ្យពួកយើងធ្វើអ្វីបន្តទៀត pro?",
+    "senderName": "Rex",
+    "senderRole": "Lead Orchestrator",
+    "senderId": "fdfc73e4-9730-488a-8489-c8cf38b78898",
+    "isAgent": true,
+    "isBriefing": true,
+    "createdAt": "2026-11-11T18:24:47.082Z"
   }
 ]
