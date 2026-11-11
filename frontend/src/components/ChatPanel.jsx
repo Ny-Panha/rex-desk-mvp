@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'react'
 import { ArrowUp } from 'lucide-react'
 import MessageBubble from './MessageBubble'
 
-export default function ChatPanel({ chatName, chatRole, messages, onSend, sending }) {
+export default function ChatPanel({ chatName, chatRole, messages, onSend, sending, onResolveApproval }) {
   const [text, setText] = useState('')
   const feedRef = useRef(null)
   const textareaRef = useRef(null)
@@ -58,7 +58,7 @@ export default function ChatPanel({ chatName, chatRole, messages, onSend, sendin
           </div>
         )}
         {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} />
+          <MessageBubble key={msg.id} message={msg} onResolveApproval={onResolveApproval} />
         ))}
       </div>
 

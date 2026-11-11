@@ -1,0 +1,28 @@
+[
+  {
+    "id": "b47629a8-efd6-40f1-8428-b189d71dac70",
+    "actionType": "git_push",
+    "title": "Git Push to GitHub",
+    "description": "Dev requests permission to execute \"git push origin main\" to update the remote repository.",
+    "payload": {
+      "command": "git push origin main"
+    },
+    "chatId": "group",
+    "status": "rejected",
+    "createdAt": "2026-11-11T18:10:07.254Z",
+    "resolvedAt": "2026-11-11T18:10:14.533Z"
+  },
+  {
+    "id": "c83dd260-ca6f-463f-951c-f58a6e858630",
+    "actionType": "file_delete",
+    "title": "Delete File: test-delete.txt",
+    "description": "Dev requests permission to permanently delete file \"test-delete.txt\" from backend/workspaces/dev/.",
+    "payload": {
+      "fileName": "test-delete.txt"
+    },
+    "chatId": "group",
+    "status": "approved",
+    "createdAt": "2026-11-11T18:10:26.112Z",
+    "resolvedAt": "2026-11-11T18:10:32.325Z"
+  }
+]

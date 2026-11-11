@@ -430,5 +430,93 @@
     "senderId": "033043b3-3250-41ec-b4ae-ba9b4c46484b",
     "isAgent": true,
     "createdAt": "2026-11-11T17:58:09.969Z"
+  },
+  {
+    "id": "9cc17c2e-31f2-497c-8f93-4bbdc1ef0d06",
+    "chatId": "group",
+    "text": "?????? push code ?? GitHub",
+    "senderName": "Nha",
+    "isAgent": false,
+    "createdAt": "2026-11-11T18:10:07.254Z"
+  },
+  {
+    "id": "644a1bed-32c3-4b87-ab5b-53e48805f938",
+    "chatId": "group",
+    "text": "🔒 [Approval Required]: Dev ស្នើសុំការអនុញ្ញាត Git Push to GitHub។\n\n📌 ព័ត៌មានលម្អិត:\nDev requests permission to execute \"git push origin main\" to update the remote repository.\n\nសូម pro សម្រេចចិត្តចុច Approve ឬ Reject ខាងក្រោមនេះមុននឹងបន្ត!",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "isApproval": true,
+    "approvalId": "b47629a8-efd6-40f1-8428-b189d71dac70",
+    "approvalStatus": "rejected",
+    "approvalData": {
+      "id": "b47629a8-efd6-40f1-8428-b189d71dac70",
+      "actionType": "git_push",
+      "title": "Git Push to GitHub",
+      "description": "Dev requests permission to execute \"git push origin main\" to update the remote repository.",
+      "payload": {
+        "command": "git push origin main"
+      },
+      "chatId": "group",
+      "status": "rejected",
+      "createdAt": "2026-11-11T18:10:07.254Z",
+      "resolvedAt": "2026-11-11T18:10:14.533Z"
+    },
+    "createdAt": "2026-11-11T18:10:07.254Z"
+  },
+  {
+    "id": "4c466cf9-250a-49d2-81d6-d5a0273cbfa9",
+    "chatId": "group",
+    "text": "❌ [Rejected by Nha]: ការស្នើសុំ \"Git Push to GitHub\" ត្រូវបានបដិសេធ (Rejected) ដោយ Nha។\nគ្មាន file ឬ git operation ណាមួយត្រូវបានធ្វើឡើយ!",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:10:14.533Z"
+  },
+  {
+    "id": "a940d406-33a5-49f0-8510-78d337270ad7",
+    "chatId": "group",
+    "text": "delete file test-delete.txt",
+    "senderName": "Nha",
+    "isAgent": false,
+    "createdAt": "2026-11-11T18:10:26.111Z"
+  },
+  {
+    "id": "2ff46f9b-6cfb-4dd8-a138-1684b7603003",
+    "chatId": "group",
+    "text": "🔒 [Approval Required]: Dev ស្នើសុំការអនុញ្ញាត Delete File: test-delete.txt។\n\n📌 ព័ត៌មានលម្អិត:\nDev requests permission to permanently delete file \"test-delete.txt\" from backend/workspaces/dev/.\n\nសូម pro សម្រេចចិត្តចុច Approve ឬ Reject ខាងក្រោមនេះមុននឹងបន្ត!",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "isApproval": true,
+    "approvalId": "c83dd260-ca6f-463f-951c-f58a6e858630",
+    "approvalStatus": "approved",
+    "approvalData": {
+      "id": "c83dd260-ca6f-463f-951c-f58a6e858630",
+      "actionType": "file_delete",
+      "title": "Delete File: test-delete.txt",
+      "description": "Dev requests permission to permanently delete file \"test-delete.txt\" from backend/workspaces/dev/.",
+      "payload": {
+        "fileName": "test-delete.txt"
+      },
+      "chatId": "group",
+      "status": "approved",
+      "createdAt": "2026-11-11T18:10:26.112Z",
+      "resolvedAt": "2026-11-11T18:10:32.325Z"
+    },
+    "createdAt": "2026-11-11T18:10:26.112Z"
+  },
+  {
+    "id": "947607ea-6b89-410d-8e0e-105b61919e17",
+    "chatId": "group",
+    "text": "✅ [Approved by Nha]: ការស្នើសុំ \"Delete File: test-delete.txt\" ត្រូវបានអនុញ្ញាត (Approved) ដោយ Nha!\n\n🚀 លទ្ធផលប្រតិបត្តិ:\nបានលុប file `test-delete.txt` ចេញពី `backend/workspaces/dev/` រួចរាល់។",
+    "senderName": "Dev",
+    "senderRole": "Fullstack Developer",
+    "senderId": "177edeaa-98e2-4bea-83ee-58e05256a21b",
+    "isAgent": true,
+    "createdAt": "2026-11-11T18:10:32.325Z"
   }
 ]

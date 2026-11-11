@@ -74,6 +74,22 @@ export default function App() {
     }
   }
 
+  const handleResolveApproval = async (approvalId, decision) => {
+    try {
+      const res = await fetch(`/api/approvals/${approvalId}/resolve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        await fetchMessages()
+      }
+    } catch (err) {
+      console.error('Failed to resolve approval:', err)
+    }
+  }
+
   const activeChatName =
     activeChat === 'group'
       ? 'Group Chat'
@@ -98,6 +114,7 @@ export default function App() {
         messages={messages}
         onSend={handleSend}
         sending={sending}
+        onResolveApproval={handleResolveApproval}
       />
       {showAddModal && (
         <AddAgentModal
