@@ -27,6 +27,7 @@
     - Frontend serves 200 OK on `http://localhost:5173` and talks to backend via proxy.
 
 ## 3. Active Environment
+- **GitHub Repository**: https://github.com/Ny-Panha/rex-desk-mvp
 - **Backend API**: `http://localhost:5001` (Node.js Express)
 - **Frontend UI**: `http://localhost:5173` (Vite + React)
 - **Data Stores**:
