@@ -355,9 +355,9 @@ app.get('/api/agents', (_req, res) => {
   res.json(agents);
 });
 
-// POST /api/agents — create a new agent { name, role }
+// POST /api/agents — create a new agent { name, role, engine }
 app.post('/api/agents', (req, res) => {
-  const { name, role } = req.body;
+  const { name, role, engine } = req.body;
   if (!name || !role) {
     return res.status(400).json({ error: 'name and role are required.' });
   }
@@ -365,10 +365,10 @@ app.post('/api/agents', (req, res) => {
   const agents = readJSON(AGENTS_FILE);
   const newAgent = {
     id: uuidv4(),
-    name,
-    role,
+    name: name.trim(),
+    role: role.trim(),
     avatarColor: AVATAR_PALETTE[Math.floor(Math.random() * AVATAR_PALETTE.length)],
-    engine: req.body.engine || 'echo',
+    engine: engine || 'gemini',
     createdAt: new Date().toISOString(),
   };
   agents.push(newAgent);

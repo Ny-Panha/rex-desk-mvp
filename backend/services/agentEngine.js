@@ -214,7 +214,7 @@ async function generateResponse({
     }
 
     // 3. QA Reviewer Agent (Gemini CLI in qaWorkspace)
-    if (agent.name === 'QA Reviewer' || agent.role.includes('Quality')) {
+    if (agent.name === 'QA Reviewer' || (agent.role && agent.role.includes('Quality'))) {
       if (chatId === 'group' && !forceEngine) {
         const isMentioned = /@qa\b/i.test(prompt);
         if (!isMentioned) {
@@ -241,6 +241,31 @@ async function generateResponse({
         timeoutMs: 120000,
       });
     }
+
+    // 4. Custom Gemini Agent (Specialist in devWorkspace)
+    if (chatId === 'group' && !forceEngine) {
+      const mentionRegex = new RegExp(`@${agent.name.replace(/[^a-zA-Z0-9]/g, '')}\\b`, 'i');
+      if (!mentionRegex.test(prompt)) {
+        return echoEngine({ agent, prompt });
+      }
+    }
+
+    const roleInstruction =
+      `You are ${agent.name}, a ${agent.role} in Rex Desk. You collaborate with Rex (Lead Orchestrator), Dev (Fullstack Developer), and QA Reviewer. Answer concisely in Khmer + simple English.`;
+    const recentMessages = history.slice(-10);
+    const contextText =
+      recentMessages.length > 0
+        ? '\n\nConversation context:\n' +
+          recentMessages.map((m) => `${m.senderName}: ${m.text}`).join('\n')
+        : '';
+
+    const fullPrompt = `${roleInstruction}${contextText}\n\n${senderName}: ${prompt}`;
+
+    return await runGeminiCli({
+      prompt: fullPrompt,
+      cwd: devWorkspace,
+      timeoutMs: 120000,
+    });
   }
 
   // Fallback: Echo engine

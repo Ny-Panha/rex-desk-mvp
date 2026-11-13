@@ -98,12 +98,12 @@ export default function App() {
     }
   }
 
-  const handleCreateAgent = async (name, role) => {
+  const handleCreateAgent = async (name, role, engine = 'gemini') => {
     try {
       await fetch('/api/agents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, role }),
+        body: JSON.stringify({ name, role, engine }),
       })
       await fetchAgents()
       setShowAddModal(false)

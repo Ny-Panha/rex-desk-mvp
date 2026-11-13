@@ -4,13 +4,14 @@ import { X, UserPlus, Sparkles } from 'lucide-react'
 export default function AddAgentModal({ onClose, onCreate }) {
   const [name, setName] = useState('')
   const [role, setRole] = useState('')
+  const [engine, setEngine] = useState('gemini')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!name.trim() || !role.trim()) return
     setLoading(true)
-    await onCreate(name.trim(), role.trim())
+    await onCreate(name.trim(), role.trim(), engine)
     setLoading(false)
   }
 
@@ -63,6 +64,20 @@ export default function AddAgentModal({ onClose, onCreate }) {
               placeholder="e.g. Database & API Architect"
               className="w-full bg-[#080c14] border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition-all"
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">
+              AI Engine
+            </label>
+            <select
+              value={engine}
+              onChange={(e) => setEngine(e.target.value)}
+              className="w-full bg-[#080c14] border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition-all cursor-pointer"
+            >
+              <option value="gemini">Gemini CLI (Autonomous AI Agent)</option>
+              <option value="echo">Echo Engine (Simple Test Mock)</option>
+            </select>
           </div>
 
           <div className="pt-2 flex items-center gap-2">
