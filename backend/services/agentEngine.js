@@ -75,6 +75,7 @@ function leadRoute(prompt) {
  */
 function getDevWorkspaceDiff() {
   try {
+    if (!fs.existsSync(devWorkspace)) return '';
     const entries = fs.readdirSync(devWorkspace);
     let output = '';
     for (const entry of entries) {
@@ -86,10 +87,20 @@ function getDevWorkspaceDiff() {
         output += `\n=== File: ${entry} ===\n${content}\n`;
       }
     }
-    return output || 'No user code files found in Dev workspace.';
+    return output.trim();
   } catch (err) {
-    return `Error reading workspace: ${err.message}`;
+    console.error('Error reading dev workspace:', err);
+    return '';
   }
+}
+
+/**
+ * Checks whether user code changes exist in devWorkspace.
+ * @returns {boolean}
+ */
+function hasDevWorkspaceChanges() {
+  const diff = getDevWorkspaceDiff();
+  return typeof diff === 'string' && diff.trim().length > 0;
 }
 
 /**
@@ -225,7 +236,7 @@ async function generateResponse({
       const roleInstruction =
         'You are QA Reviewer, a Senior Code Quality & Security Engineer in Rex Desk. You work ONLY inside backend/workspaces/qa/. When reviewing, analyze the code/diff for correctness, bugs, readability, and security vulnerabilities. Answer concisely in Khmer + simple English.';
 
-      const diffText = reviewContext || getDevWorkspaceDiff();
+      const diffText = reviewContext || getDevWorkspaceDiff() || '(No modified code files found in Dev workspace yet)';
       const recentMessages = history.slice(-5);
       const contextText =
         recentMessages.length > 0
@@ -296,6 +307,7 @@ module.exports = {
   generateResponse,
   leadRoute,
   getDevWorkspaceDiff,
+  hasDevWorkspaceChanges,
   isAgentEngineError,
   devWorkspace,
   qaWorkspace,

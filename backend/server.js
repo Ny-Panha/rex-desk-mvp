@@ -8,7 +8,7 @@ const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { generateResponse, leadRoute, getDevWorkspaceDiff, isAgentEngineError, devWorkspace } = require('./services/agentEngine');
+const { generateResponse, leadRoute, getDevWorkspaceDiff, hasDevWorkspaceChanges, isAgentEngineError, devWorkspace } = require('./services/agentEngine');
 
 const app = express();
 const PORT = 5001;
@@ -109,28 +109,33 @@ async function triggerQueueProcessing() {
 
       // Announce in group chat that worker picked up job
       const agents = readJSON(AGENTS_FILE);
-      const devAgent = agents.find((a) => a.name === 'Dev') || agents[0];
+      const targetAgentName = (nextJob.targetAgent || 'Dev').trim();
+      const workerAgent =
+        agents.find((a) => a.name.toLowerCase() === targetAgentName.toLowerCase()) ||
+        agents.find((a) => a.name.toLowerCase().includes(targetAgentName.toLowerCase())) ||
+        agents.find((a) => a.name === 'Dev') ||
+        agents[0];
 
       const startMsg = {
         id: uuidv4(),
         chatId: 'group',
-        text: `⚙️ [Queue Worker]: កំពុងដំណើរការ task ពី Queue: "${nextJob.task}"...`,
-        senderName: devAgent.name,
-        senderRole: devAgent.role,
-        senderId: devAgent.id,
+        text: `⚙️ [Queue Worker]: កំពុងដំណើរការ task ពី Queue សម្រាប់ @${workerAgent.name}: "${nextJob.task}"...`,
+        senderName: workerAgent.name,
+        senderRole: workerAgent.role,
+        senderId: workerAgent.id,
         isAgent: true,
         createdAt: new Date().toISOString(),
       };
       await appendMessages(startMsg);
 
-      // Run Dev response via Gemini CLI
+      // Run worker response via Gemini CLI
       const currentMessages = readJSON(MESSAGES_FILE);
       const history = currentMessages.filter((m) => m.chatId === 'group');
       let resultText = '';
       let isError = false;
       try {
         resultText = await generateResponse({
-          agent: devAgent,
+          agent: workerAgent,
           prompt: nextJob.task,
           chatId: 'group',
           history,
@@ -160,44 +165,46 @@ async function triggerQueueProcessing() {
         id: uuidv4(),
         chatId: 'group',
         text: resultText,
-        senderName: devAgent.name,
-        senderRole: devAgent.role,
-        senderId: devAgent.id,
+        senderName: workerAgent.name,
+        senderRole: workerAgent.role,
+        senderId: workerAgent.id,
         isAgent: true,
         createdAt: new Date().toISOString(),
       };
       await appendMessages(finishMsg);
 
-      // If QA Reviewer exists and Dev changed code, run QA review
+      // If QA Reviewer exists, worker was NOT QA, and user code changes exist, run QA review
       const qaAgent = agents.find((a) => a.name === 'QA Reviewer');
-      if (qaAgent) {
+      const isAlreadyQa =
+        workerAgent.name === 'QA Reviewer' ||
+        (workerAgent.role && workerAgent.role.includes('Quality'));
+
+      if (qaAgent && !isAlreadyQa && hasDevWorkspaceChanges()) {
         const devDiff = getDevWorkspaceDiff();
-        if (devDiff && devDiff.trim().length > 0) {
-          try {
-            const latestHistory = readJSON(MESSAGES_FILE).filter((m) => m.chatId === 'group');
-            const qaResponse = await generateResponse({
-              agent: qaAgent,
-              prompt: `Review recent code for queue task: "${nextJob.task}"`,
-              chatId: 'group',
-              history: latestHistory,
-              senderName: 'System',
-              forceEngine: true,
-              reviewContext: devDiff,
-            });
-            const qaMsg = {
-              id: uuidv4(),
-              chatId: 'group',
-              text: qaResponse,
-              senderName: qaAgent.name,
-              senderRole: qaAgent.role,
-              senderId: qaAgent.id,
-              isAgent: true,
-              createdAt: new Date().toISOString(),
-            };
-            await appendMessages(qaMsg);
-          } catch (qaErr) {
-            console.error('QA queue review error:', qaErr);
-          }
+        try {
+          const latestHistory = readJSON(MESSAGES_FILE).filter((m) => m.chatId === 'group');
+          const qaResponse = await generateResponse({
+            agent: qaAgent,
+            prompt: `Review recent code for queue task: "${nextJob.task}"`,
+            chatId: 'group',
+            history: latestHistory,
+            senderName: 'System',
+            forceEngine: true,
+            reviewContext: devDiff,
+          });
+          const qaMsg = {
+            id: uuidv4(),
+            chatId: 'group',
+            text: qaResponse,
+            senderName: qaAgent.name,
+            senderRole: qaAgent.role,
+            senderId: qaAgent.id,
+            isAgent: true,
+            createdAt: new Date().toISOString(),
+          };
+          await appendMessages(qaMsg);
+        } catch (qaErr) {
+          console.error('QA queue review error:', qaErr);
         }
       }
 
@@ -207,7 +214,8 @@ async function triggerQueueProcessing() {
         away.completedWhileAway.push({
           jobId: nextJob.id,
           task: nextJob.task,
-          agent: devAgent.name,
+          agent: workerAgent.name,
+          status: isError ? 'failed' : 'completed',
           completedAt: new Date().toISOString(),
         });
         setAwayState(away);
@@ -454,12 +462,28 @@ app.post('/api/messages', async (req, res) => {
 
   // Check for /queue command (Step 6: Away Mode-lite)
   if (/^\/queue\s+/i.test(text) || /^queue:\s+/i.test(text)) {
-    const taskText = text.replace(/^\/queue\s+|^queue:\s+/i, '').trim();
+    const rawTask = text.replace(/^\/queue\s+|^queue:\s+/i, '').trim();
+    let targetAgent = 'Dev';
+    let taskText = rawTask;
+
+    if (/@qa\b/i.test(rawTask)) {
+      targetAgent = 'QA Reviewer';
+      taskText = rawTask.replace(/@qa\b/i, '').trim();
+    } else if (/@dev\b/i.test(rawTask)) {
+      targetAgent = 'Dev';
+      taskText = rawTask.replace(/@dev\b/i, '').trim();
+    } else {
+      const routing = leadRoute(rawTask);
+      if (routing.target === 'QA Reviewer') {
+        targetAgent = 'QA Reviewer';
+      }
+    }
+
     const jobs = readJSON(JOBS_FILE);
     const newJob = {
       id: uuidv4(),
       task: taskText,
-      targetAgent: 'Dev',
+      targetAgent,
       status: 'pending',
       result: null,
       createdAt: new Date().toISOString(),
@@ -472,7 +496,7 @@ app.post('/api/messages', async (req, res) => {
     const queueConfirmMsg = {
       id: uuidv4(),
       chatId,
-      text: `📋 [Job Queued]: Task "${taskText}" ត្រូវបានបន្ថែមទៅក្នុង Background Queue ដោយជោគជ័យ! Rex & Dev នឹងដំណើរការ task នេះនៅ background។`,
+      text: `📋 [Job Queued]: Task "${taskText}" ត្រូវបានបន្ថែមទៅក្នុង Background Queue សម្រាប់ @${targetAgent} ដោយជោគជ័យ!`,
       senderName: leadAgent.name,
       senderRole: leadAgent.role,
       senderId: leadAgent.id,

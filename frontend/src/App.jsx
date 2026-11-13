@@ -145,12 +145,12 @@ export default function App() {
     }
   }
 
-  const handleEnqueueJob = async (task) => {
+  const handleEnqueueJob = async (task, targetAgent = 'Dev') => {
     try {
       await fetch('/api/jobs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ task, targetAgent: 'Dev' }),
+        body: JSON.stringify({ task, targetAgent }),
       })
       await fetchJobs()
       await fetchMessages()
@@ -199,6 +199,7 @@ export default function App() {
         <QueueModal
           onClose={() => setShowQueueModal(false)}
           jobs={jobs}
+          agents={agents}
           onEnqueue={handleEnqueueJob}
         />
       )}

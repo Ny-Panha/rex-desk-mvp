@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { X, Plus, Clock, CheckCircle2, Loader2, Layers, Bot, AlertTriangle } from 'lucide-react'
 
-export default function QueueModal({ onClose, jobs, onEnqueue }) {
+export default function QueueModal({ onClose, jobs, agents = [], onEnqueue }) {
   const [taskText, setTaskText] = useState('')
+  const [targetAgent, setTargetAgent] = useState('Dev')
   const [submitting, setSubmitting] = useState(false)
 
   const handleSubmit = async (e) => {
@@ -10,7 +11,7 @@ export default function QueueModal({ onClose, jobs, onEnqueue }) {
     if (!taskText.trim() || submitting) return
     setSubmitting(true)
     try {
-      await onEnqueue(taskText.trim())
+      await onEnqueue(taskText.trim(), targetAgent)
       setTaskText('')
     } finally {
       setSubmitting(false)
@@ -51,8 +52,8 @@ export default function QueueModal({ onClose, jobs, onEnqueue }) {
         </div>
 
         {/* Enqueue Form */}
-        <form onSubmit={handleSubmit} className="p-4 border-b border-slate-800 bg-[#0a0e17]">
-          <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+        <form onSubmit={handleSubmit} className="p-4 border-b border-slate-800 bg-[#0a0e17] space-y-2">
+          <label className="block text-xs font-semibold text-slate-300">
             Enqueue Autonomous Task
           </label>
           <div className="flex gap-2">
@@ -63,6 +64,26 @@ export default function QueueModal({ onClose, jobs, onEnqueue }) {
               placeholder="e.g. Write a helper function formatCurrency(amount)"
               className="flex-1 bg-[#0f1623] border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition-all font-mono"
             />
+            <select
+              value={targetAgent}
+              onChange={(e) => setTargetAgent(e.target.value)}
+              className="bg-[#0f1623] border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-slate-200 outline-none focus:border-indigo-500 transition-all cursor-pointer font-mono"
+            >
+              {agents && agents.filter((a) => a.engine !== 'lead').length > 0 ? (
+                agents
+                  .filter((a) => a.engine !== 'lead')
+                  .map((a) => (
+                    <option key={a.id} value={a.name}>
+                      @{a.name}
+                    </option>
+                  ))
+              ) : (
+                <>
+                  <option value="Dev">@Dev</option>
+                  <option value="QA Reviewer">@QA Reviewer</option>
+                </>
+              )}
+            </select>
             <button
               type="submit"
               disabled={!taskText.trim() || submitting}
