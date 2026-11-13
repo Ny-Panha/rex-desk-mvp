@@ -95,7 +95,7 @@ export default function App() {
   }, [fetchHealth, fetchMessages, fetchJobs, fetchAwayState])
 
   const handleSend = async (text) => {
-    if (!text.trim() || sending) return
+    if (!text.trim() || sending) return false
     setSending(true)
     try {
       const res = await fetch('/api/messages', {
@@ -107,12 +107,17 @@ export default function App() {
           senderName: 'You',
         }),
       })
+      if (!res.ok) {
+        throw new Error(`Server returned ${res.status}`)
+      }
       const newMessages = await res.json()
       setMessages((prev) => [...prev, ...newMessages])
       fetchJobs()
       fetchAwayState()
+      return true
     } catch (err) {
       console.error('Failed to send message:', err)
+      return false
     } finally {
       setSending(false)
     }

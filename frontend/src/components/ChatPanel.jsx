@@ -17,6 +17,7 @@ export default function ChatPanel({
   modelName = '',
 }) {
   const [text, setText] = useState('')
+  const [sendError, setSendError] = useState(null)
   const feedRef = useRef(null)
   const textareaRef = useRef(null)
 
@@ -38,12 +39,18 @@ export default function ChatPanel({
     }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!text.trim() || sending) return
-    onSend(text)
-    setText('')
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
+    setSendError(null)
+    const success = await onSend(text)
+    if (success) {
+      setText('')
+      setSendError(null)
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto'
+      }
+    } else {
+      setSendError('Send failed — backend unreachable. Your message is still in the box.')
     }
   }
 
@@ -205,12 +212,48 @@ export default function ChatPanel({
               />
             ))
           )}
+
+          {/* Working Indicator Bubble */}
+          {sending && (
+            <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-[#0f1623]/90 border border-indigo-500/30 text-xs text-slate-200 shadow-md">
+              <div className="w-7 h-7 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 flex-shrink-0 animate-pulse">
+                <Bot size={15} />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5 font-semibold text-indigo-300">
+                  <span>Rex Desk is working…</span>
+                  <span className="flex gap-1 items-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:0.2s]"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:0.4s]"></span>
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 font-mono">
+                  (Group Chat Dev+QA can take 1-4 minutes)
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Input Section (Constrained max-w-4xl) */}
       <div className="p-4 border-t border-slate-800/80 bg-[#0d121d]/80 backdrop-blur-md">
         <div className="max-w-4xl mx-auto space-y-2">
+          {/* Send Error Notice */}
+          {sendError && (
+            <div className="text-[11px] text-rose-300 bg-rose-500/15 border border-rose-500/30 px-3 py-1.5 rounded-xl font-mono flex items-center justify-between">
+              <span>{sendError}</span>
+              <button
+                type="button"
+                onClick={() => setSendError(null)}
+                className="text-rose-400 hover:text-white text-xs ml-2 cursor-pointer font-bold"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           {/* Quick Action Chips */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] text-slate-400 font-mono no-scrollbar">
             <span className="text-slate-500 mr-1 text-[10px]">Quick Prompts:</span>
