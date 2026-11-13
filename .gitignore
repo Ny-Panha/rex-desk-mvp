@@ -20,3 +20,7 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
+# AI Models & Large Binaries (>100MB blocked by GitHub)
+ollama_models/
+*.gguf
+
