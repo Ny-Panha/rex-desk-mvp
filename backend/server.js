@@ -18,7 +18,7 @@ app.use(cors());
 app.use(express.json());
 
 // ---------------------------------------------------------------------------
-// Helpers – read / write JSON files
+// Helpers – read / write JSON files & Atomic Message Queue
 // ---------------------------------------------------------------------------
 
 const DATA_DIR = path.join(__dirname, 'data');
@@ -27,6 +27,48 @@ const MESSAGES_FILE = path.join(DATA_DIR, 'messages.json');
 const APPROVALS_FILE = path.join(DATA_DIR, 'approvals.json');
 const JOBS_FILE = path.join(DATA_DIR, 'jobs.json');
 const AWAY_FILE = path.join(DATA_DIR, 'away.json');
+
+let messageWriteQueue = Promise.resolve();
+
+/**
+ * Atomically appends one or more messages to messages.json.
+ * Re-reads latest state from disk inside a serialized promise chain
+ * so no concurrent requests or background workers overwrite each other.
+ * @param {object | Array<object>} msgs
+ * @returns {Promise<void>}
+ */
+function appendMessages(msgs) {
+  const items = Array.isArray(msgs) ? msgs : [msgs];
+  messageWriteQueue = messageWriteQueue.then(() => {
+    try {
+      const current = readJSON(MESSAGES_FILE);
+      current.push(...items);
+      writeJSON(MESSAGES_FILE, current);
+    } catch (err) {
+      console.error('Error appending messages to messages.json:', err);
+    }
+  });
+  return messageWriteQueue;
+}
+
+/**
+ * Atomically mutates messages.json via an updater callback.
+ * Used for in-place modifications such as approval resolution.
+ * @param {(messages: Array<object>) => void} mutator
+ * @returns {Promise<void>}
+ */
+function updateMessages(mutator) {
+  messageWriteQueue = messageWriteQueue.then(() => {
+    try {
+      const current = readJSON(MESSAGES_FILE);
+      mutator(current);
+      writeJSON(MESSAGES_FILE, current);
+    } catch (err) {
+      console.error('Error mutating messages.json:', err);
+    }
+  });
+  return messageWriteQueue;
+}
 
 function getAwayState() {
   try {
@@ -68,7 +110,6 @@ async function triggerQueueProcessing() {
       // Announce in group chat that worker picked up job
       const agents = readJSON(AGENTS_FILE);
       const devAgent = agents.find((a) => a.name === 'Dev') || agents[0];
-      const messages = readJSON(MESSAGES_FILE);
 
       const startMsg = {
         id: uuidv4(),
@@ -80,11 +121,11 @@ async function triggerQueueProcessing() {
         isAgent: true,
         createdAt: new Date().toISOString(),
       };
-      messages.push(startMsg);
-      writeJSON(MESSAGES_FILE, messages);
+      await appendMessages(startMsg);
 
       // Run Dev response via Gemini CLI
-      const history = messages.filter((m) => m.chatId === 'group');
+      const currentMessages = readJSON(MESSAGES_FILE);
+      const history = currentMessages.filter((m) => m.chatId === 'group');
       let resultText = '';
       let isError = false;
       try {
@@ -115,7 +156,6 @@ async function triggerQueueProcessing() {
       }
 
       // Append completion message to group chat
-      const updatedMessages = readJSON(MESSAGES_FILE);
       const finishMsg = {
         id: uuidv4(),
         chatId: 'group',
@@ -126,8 +166,7 @@ async function triggerQueueProcessing() {
         isAgent: true,
         createdAt: new Date().toISOString(),
       };
-      updatedMessages.push(finishMsg);
-      writeJSON(MESSAGES_FILE, updatedMessages);
+      await appendMessages(finishMsg);
 
       // If QA Reviewer exists and Dev changed code, run QA review
       const qaAgent = agents.find((a) => a.name === 'QA Reviewer');
@@ -135,11 +174,12 @@ async function triggerQueueProcessing() {
         const devDiff = getDevWorkspaceDiff();
         if (devDiff && devDiff.trim().length > 0) {
           try {
+            const latestHistory = readJSON(MESSAGES_FILE).filter((m) => m.chatId === 'group');
             const qaResponse = await generateResponse({
               agent: qaAgent,
               prompt: `Review recent code for queue task: "${nextJob.task}"`,
               chatId: 'group',
-              history: [...updatedMessages, finishMsg],
+              history: latestHistory,
               senderName: 'System',
               forceEngine: true,
               reviewContext: devDiff,
@@ -154,9 +194,7 @@ async function triggerQueueProcessing() {
               isAgent: true,
               createdAt: new Date().toISOString(),
             };
-            const finalMsgs = readJSON(MESSAGES_FILE);
-            finalMsgs.push(qaMsg);
-            writeJSON(MESSAGES_FILE, finalMsgs);
+            await appendMessages(qaMsg);
           } catch (qaErr) {
             console.error('QA queue review error:', qaErr);
           }
@@ -359,11 +397,10 @@ app.post('/api/messages', async (req, res) => {
     return res.status(400).json({ error: 'chatId, text, and senderName are required.' });
   }
 
-  const messages = readJSON(MESSAGES_FILE);
   const agents = readJSON(AGENTS_FILE);
   const newMessages = [];
 
-  // 1. Save the user message
+  // 1. Save the user message immediately via atomic append
   const userMsg = {
     id: uuidv4(),
     chatId,
@@ -372,7 +409,7 @@ app.post('/api/messages', async (req, res) => {
     isAgent: false,
     createdAt: new Date().toISOString(),
   };
-  messages.push(userMsg);
+  await appendMessages(userMsg);
   newMessages.push(userMsg);
 
   // Check for critical actions requiring human approval (Approval Gate)
@@ -409,10 +446,9 @@ app.post('/api/messages', async (req, res) => {
       approvalData: approvalRecord,
       createdAt: new Date().toISOString(),
     };
-    messages.push(approvalMsg);
+    await appendMessages(approvalMsg);
     newMessages.push(approvalMsg);
 
-    writeJSON(MESSAGES_FILE, messages);
     return res.status(201).json(newMessages);
   }
 
@@ -443,9 +479,8 @@ app.post('/api/messages', async (req, res) => {
       isAgent: true,
       createdAt: new Date().toISOString(),
     };
-    messages.push(queueConfirmMsg);
+    await appendMessages(queueConfirmMsg);
     newMessages.push(queueConfirmMsg);
-    writeJSON(MESSAGES_FILE, messages);
 
     // Run queue in background
     triggerQueueProcessing();
@@ -454,7 +489,7 @@ app.post('/api/messages', async (req, res) => {
 
   // 2. Generate agent response(s)
   if (chatId === 'group') {
-    const history = messages.filter((m) => m.chatId === 'group');
+    const history = readJSON(MESSAGES_FILE).filter((m) => m.chatId === 'group');
 
     // Find Lead agent (Rex)
     const leadAgent =
@@ -474,7 +509,7 @@ app.post('/api/messages', async (req, res) => {
         isAgent: true,
         createdAt: new Date().toISOString(),
       };
-      messages.push(rexMsg);
+      await appendMessages(rexMsg);
       newMessages.push(rexMsg);
 
       // 2. If Rex routes to Dev (or user explicitly tagged @Dev):
@@ -484,7 +519,7 @@ app.post('/api/messages', async (req, res) => {
           agents.find((a) => a.engine === 'gemini');
 
         if (devAgent) {
-          const updatedHistory = [...history, userMsg, rexMsg];
+          const updatedHistory = [...history, rexMsg];
           const devResponseText = await generateResponse({
             agent: devAgent,
             prompt: text,
@@ -504,7 +539,7 @@ app.post('/api/messages', async (req, res) => {
             isAgent: true,
             createdAt: new Date().toISOString(),
           };
-          messages.push(devMsg);
+          await appendMessages(devMsg);
           newMessages.push(devMsg);
 
           // Track in away mode if active
@@ -522,7 +557,7 @@ app.post('/api/messages', async (req, res) => {
           const qaAgent = agents.find((a) => a.name === 'QA Reviewer');
           if (qaAgent) {
             const devDiff = getDevWorkspaceDiff();
-            const updatedHistoryWithDev = [...history, userMsg, rexMsg, devMsg];
+            const updatedHistoryWithDev = [...history, rexMsg, devMsg];
             const qaResponseText = await generateResponse({
               agent: qaAgent,
               prompt: `Review Dev's recent code for task: "${text}"`,
@@ -543,7 +578,7 @@ app.post('/api/messages', async (req, res) => {
               isAgent: true,
               createdAt: new Date().toISOString(),
             };
-            messages.push(qaMsg);
+            await appendMessages(qaMsg);
             newMessages.push(qaMsg);
           }
         }
@@ -554,7 +589,7 @@ app.post('/api/messages', async (req, res) => {
 
         if (qaAgent) {
           const devDiff = getDevWorkspaceDiff();
-          const updatedHistory = [...history, userMsg, rexMsg];
+          const updatedHistory = [...history, rexMsg];
           const qaResponseText = await generateResponse({
             agent: qaAgent,
             prompt: text,
@@ -575,7 +610,7 @@ app.post('/api/messages', async (req, res) => {
             isAgent: true,
             createdAt: new Date().toISOString(),
           };
-          messages.push(qaMsg);
+          await appendMessages(qaMsg);
           newMessages.push(qaMsg);
 
           // Track in away mode if active
@@ -593,11 +628,12 @@ app.post('/api/messages', async (req, res) => {
     } else {
       // Fallback
       for (const agent of agents) {
+        const historyForAgent = readJSON(MESSAGES_FILE).filter((m) => m.chatId === 'group');
         const responseText = await generateResponse({
           agent,
           prompt: text,
           chatId,
-          history,
+          history: historyForAgent,
           senderName,
         });
         const agentMsg = {
@@ -610,7 +646,7 @@ app.post('/api/messages', async (req, res) => {
           isAgent: true,
           createdAt: new Date().toISOString(),
         };
-        messages.push(agentMsg);
+        await appendMessages(agentMsg);
         newMessages.push(agentMsg);
       }
     }
@@ -618,7 +654,7 @@ app.post('/api/messages', async (req, res) => {
     // Direct chat — find specific agent
     const agent = agents.find((a) => a.id === chatId);
     if (agent) {
-      const history = messages.filter((m) => m.chatId === chatId);
+      const history = readJSON(MESSAGES_FILE).filter((m) => m.chatId === chatId);
       const responseText = await generateResponse({
         agent,
         prompt: text,
@@ -636,12 +672,11 @@ app.post('/api/messages', async (req, res) => {
         isAgent: true,
         createdAt: new Date().toISOString(),
       };
-      messages.push(agentMsg);
+      await appendMessages(agentMsg);
       newMessages.push(agentMsg);
     }
   }
 
-  writeJSON(MESSAGES_FILE, messages);
   res.status(201).json(newMessages);
 });
 
@@ -656,7 +691,7 @@ app.get('/api/approvals', (_req, res) => {
 });
 
 // POST /api/approvals/:id/resolve — approve or reject a pending critical action
-app.post('/api/approvals/:id/resolve', (req, res) => {
+app.post('/api/approvals/:id/resolve', async (req, res) => {
   const { id } = req.params;
   const { decision } = req.body; // 'approve' | 'reject'
 
@@ -680,18 +715,6 @@ app.post('/api/approvals/:id/resolve', (req, res) => {
   approval.resolvedAt = now;
   approvals[approvalIndex] = approval;
   writeJSON(APPROVALS_FILE, approvals);
-
-  // Update corresponding approval message in messages.json
-  const messages = readJSON(MESSAGES_FILE);
-  messages.forEach((m) => {
-    if (m.approvalId === id) {
-      m.approvalStatus = approval.status;
-      if (m.approvalData) {
-        m.approvalData.status = approval.status;
-        m.approvalData.resolvedAt = now;
-      }
-    }
-  });
 
   const agents = readJSON(AGENTS_FILE);
   const devAgent = agents.find((a) => a.name === 'Dev') || agents[0];
@@ -778,8 +801,19 @@ app.post('/api/approvals/:id/resolve', (req, res) => {
     };
   }
 
-  messages.push(resolutionMsg);
-  writeJSON(MESSAGES_FILE, messages);
+  // Atomically update approval status in messages.json and append resolution message
+  await updateMessages((msgs) => {
+    msgs.forEach((m) => {
+      if (m.approvalId === id) {
+        m.approvalStatus = approval.status;
+        if (m.approvalData) {
+          m.approvalData.status = approval.status;
+          m.approvalData.resolvedAt = now;
+        }
+      }
+    });
+    msgs.push(resolutionMsg);
+  });
 
   res.json({
     success: true,
@@ -834,7 +868,6 @@ app.get('/api/away', (_req, res) => {
 app.post('/api/away/toggle', async (req, res) => {
   const { isAway } = req.body;
   const away = getAwayState();
-  const messages = readJSON(MESSAGES_FILE);
   const agents = readJSON(AGENTS_FILE);
   const rexAgent = agents.find((a) => a.name === 'Rex') || agents[0];
 
@@ -854,8 +887,7 @@ app.post('/api/away/toggle', async (req, res) => {
       isAgent: true,
       createdAt: new Date().toISOString(),
     };
-    messages.push(awayMsg);
-    writeJSON(MESSAGES_FILE, messages);
+    await appendMessages(awayMsg);
 
     return res.json({ success: true, away, message: awayMsg });
   } else {
@@ -883,8 +915,7 @@ app.post('/api/away/toggle', async (req, res) => {
       isBriefing: true,
       createdAt: new Date().toISOString(),
     };
-    messages.push(resumeMsg);
-    writeJSON(MESSAGES_FILE, messages);
+    await appendMessages(resumeMsg);
 
     away.isAway = false;
     away.awaySince = null;
