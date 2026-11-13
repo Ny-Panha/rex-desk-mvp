@@ -7,6 +7,7 @@ const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 const { generateResponse, leadRoute, getDevWorkspaceDiff, devWorkspace } = require('./services/agentEngine');
 
 const app = express();
@@ -176,16 +177,30 @@ async function triggerQueueProcessing() {
   }
 }
 
+function getCurrentGitBranch() {
+  try {
+    const branch = execSync('git rev-parse --abbrev-ref HEAD', {
+      cwd: path.resolve(__dirname, '..'),
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'ignore'],
+    }).trim();
+    return branch || 'main';
+  } catch {
+    return 'main';
+  }
+}
+
 function detectCriticalAction(text) {
   const t = (text || '').toLowerCase();
 
   // Git push
   if (/git\s+push|push\s+.*code|push\s+.*github|push\s+ទៅ/i.test(t)) {
+    const currentBranch = getCurrentGitBranch();
     return {
       actionType: 'git_push',
-      title: 'Git Push to GitHub',
-      description: 'Dev requests permission to execute "git push origin main" to update the remote repository.',
-      payload: { command: 'git push origin main' }
+      title: `Git Push (${currentBranch} -> origin)`,
+      description: `Dev requests permission to execute "git push origin ${currentBranch}" to update the remote repository.`,
+      payload: { command: `git push origin ${currentBranch}`, branch: currentBranch, remote: 'origin' }
     };
   }
 
@@ -665,21 +680,57 @@ app.post('/api/approvals/:id/resolve', (req, res) => {
   } else {
     // Approved - execute the action
     let executionResult = '';
+    const repoRoot = path.resolve(__dirname, '..');
+
     if (approval.actionType === 'file_delete') {
-      const fileName = approval.payload?.fileName;
-      if (fileName) {
-        const targetPath = path.join(devWorkspace, fileName);
+      const rawName = approval.payload?.fileName;
+      if (rawName) {
+        const safeName = path.basename(rawName);
+        const targetPath = path.join(devWorkspace, safeName);
         if (fs.existsSync(targetPath)) {
-          fs.unlinkSync(targetPath);
-          executionResult = `បានលុប file \`${fileName}\` ចេញពី \`backend/workspaces/dev/\` រួចរាល់។`;
+          try {
+            fs.unlinkSync(targetPath);
+            executionResult = `បានលុប file \`${safeName}\` ចេញពី \`backend/workspaces/dev/\` រួចរាល់។`;
+          } catch (delErr) {
+            executionResult = `⚠️ បរាជ័យក្នុងការលុប file \`${safeName}\`: ${delErr.message}`;
+          }
         } else {
-          executionResult = `File \`${fileName}\` មិនត្រូវបានរកឃើញក្នុង workspace ទេ (អាចត្រូវបានលុបរួចហើយ)។`;
+          executionResult = `File \`${safeName}\` មិនត្រូវបានរកឃើញក្នុង workspace ទេ (អាចត្រូវបានលុបរួចហើយ)។`;
         }
+      } else {
+        executionResult = `⚠️ គ្មាន file ត្រូវបានបញ្ជាក់ដើម្បីលុបឡើយ។`;
       }
     } else if (approval.actionType === 'git_push') {
-      executionResult = `បានធ្វើការ Push code ទៅកាន់ remote repository (origin main) ដោយជោគជ័យ! Remote branch ត្រូវបានធ្វើបច្ចុប្បន្នភាព។`;
+      const branch = approval.payload?.branch || getCurrentGitBranch();
+      const remote = approval.payload?.remote || 'origin';
+      try {
+        const pushOutput = execSync(`git push ${remote} ${branch}`, {
+          cwd: repoRoot,
+          encoding: 'utf-8',
+          stdio: ['pipe', 'pipe', 'pipe'],
+          timeout: 45000,
+        });
+        const trimmed = (pushOutput || '').trim();
+        executionResult = `បានធ្វើការ Push code ទៅកាន់ remote (${remote} ${branch}) ដោយជោគជ័យ!\n\`\`\`\n${trimmed || 'Everything up-to-date'}\n\`\`\``;
+      } catch (err) {
+        const errMsg = (err.stderr || err.stdout || err.message || '').toString().trim();
+        executionResult = `⚠️ Git push failed:\n\`\`\`\n${errMsg || 'Unknown git push error'}\n\`\`\``;
+      }
     } else if (approval.actionType === 'merge') {
-      executionResult = `បាន merge branch ចូល main branch ដោយជោគជ័យ!`;
+      const branchToMerge = approval.payload?.branch || 'main';
+      try {
+        const mergeOutput = execSync(`git merge ${branchToMerge}`, {
+          cwd: repoRoot,
+          encoding: 'utf-8',
+          stdio: ['pipe', 'pipe', 'pipe'],
+          timeout: 45000,
+        });
+        const trimmed = (mergeOutput || '').trim();
+        executionResult = `បាន merge branch \`${branchToMerge}\` ដោយជោគជ័យ!\n\`\`\`\n${trimmed || 'Already up to date'}\n\`\`\``;
+      } catch (err) {
+        const errMsg = (err.stderr || err.stdout || err.message || '').toString().trim();
+        executionResult = `⚠️ Git merge failed:\n\`\`\`\n${errMsg || 'Unknown git merge error'}\n\`\`\``;
+      }
     } else {
       executionResult = `ប្រតិបត្តិការ ${approval.title} ត្រូវបានអនុវត្តដោយជោគជ័យ។`;
     }
