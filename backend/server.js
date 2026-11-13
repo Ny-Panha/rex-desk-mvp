@@ -405,6 +405,29 @@ app.post('/api/agents', (req, res) => {
   res.status(201).json(newAgent);
 });
 
+// DELETE /api/agents/:id — remove custom agent (protects seed trio)
+app.delete('/api/agents/:id', (req, res) => {
+  const { id } = req.params;
+  const agents = readJSON(AGENTS_FILE);
+  const agentIndex = agents.findIndex((a) => a.id === id);
+
+  if (agentIndex === -1) {
+    return res.status(404).json({ error: 'Agent not found.' });
+  }
+
+  const targetAgent = agents[agentIndex];
+  const SEED_NAMES = ['Rex', 'Dev', 'QA Reviewer'];
+  if (SEED_NAMES.includes(targetAgent.name) || targetAgent.engine === 'lead') {
+    return res.status(400).json({
+      error: `Cannot delete protected seed agent "${targetAgent.name}".`,
+    });
+  }
+
+  agents.splice(agentIndex, 1);
+  writeJSON(AGENTS_FILE, agents);
+  res.json({ success: true, deleted: targetAgent });
+});
+
 // ---------------------------------------------------------------------------
 // Routes – Messages
 // ---------------------------------------------------------------------------

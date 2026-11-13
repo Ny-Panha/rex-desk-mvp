@@ -1,30 +1,38 @@
-import { Users, Plus, Bot, Terminal, ShieldCheck, Sparkles } from 'lucide-react'
+import { Users, Plus, Bot, Terminal, ShieldCheck, Sparkles, Trash2 } from 'lucide-react'
 
 export default function Sidebar({
   agents,
   activeChat,
   onSelectChat,
   onAddAgent,
+  onDeleteAgent,
   backendOnline = true,
   modelName = '',
 }) {
-  const getAgentRoleBadge = (role = '') => {
-    const r = role.toLowerCase()
-    if (r.includes('lead') || r.includes('orchestrator')) {
+  const getAgentRoleBadge = (agent = {}) => {
+    const name = (agent.name || '').toLowerCase()
+    const r = (agent.role || '').toLowerCase()
+    if (name === 'rex' || r.includes('lead') || r.includes('orchestrator')) {
       return {
         label: 'Lead',
         badge: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
         dot: 'bg-indigo-400',
       }
     }
-    if (r.includes('dev') || r.includes('fullstack')) {
+    if (name === 'dev' || r.includes('dev') || r.includes('fullstack')) {
       return {
         label: 'Dev',
         badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
         dot: 'bg-emerald-400',
       }
     }
-    if (r.includes('qa') || r.includes('security') || r.includes('quality')) {
+    if (
+      name === 'qa reviewer' ||
+      name === 'qa' ||
+      r.includes('qa') ||
+      r.includes('security') ||
+      r.includes('quality')
+    ) {
       return {
         label: 'QA',
         badge: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
@@ -36,6 +44,28 @@ export default function Sidebar({
       badge: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
       dot: 'bg-slate-400',
     }
+  }
+
+  const getEngineTag = (agent) => {
+    if (agent.name === 'Rex' || agent.engine === 'lead') {
+      return (
+        <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border bg-indigo-500/10 text-indigo-300 border-indigo-500/20">
+          Lead
+        </span>
+      )
+    }
+    if (agent.engine === 'gemini') {
+      return (
+        <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border bg-emerald-500/10 text-emerald-300 border-emerald-500/30">
+          Gemini
+        </span>
+      )
+    }
+    return (
+      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border bg-slate-800 text-slate-400 border-slate-700">
+        Echo
+      </span>
+    )
   }
 
   return (
@@ -115,20 +145,22 @@ export default function Sidebar({
           </div>
           <div className="space-y-1">
             {agents.map((agent) => {
-              const meta = getAgentRoleBadge(agent.role)
+              const meta = getAgentRoleBadge(agent)
               const isSelected = activeChat === agent.id
+              const isSeedAgent =
+                ['Rex', 'Dev', 'QA Reviewer'].includes(agent.name) || agent.engine === 'lead'
 
               return (
                 <button
                   key={agent.id}
                   onClick={() => onSelectChat(agent.id)}
-                  className={`w-full flex items-center justify-between p-2 rounded-xl text-xs transition-all cursor-pointer ${
+                  className={`group w-full flex items-center justify-between p-2 rounded-xl text-xs transition-all cursor-pointer ${
                     isSelected
                       ? 'bg-slate-800/90 text-white border border-slate-700/80 shadow-xs'
                       : 'text-slate-300 hover:bg-slate-800/40 hover:text-slate-100 border border-transparent'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex items-center gap-2.5 min-w-0 pr-1">
                     <div className="relative flex-shrink-0">
                       <div
                         className="w-7 h-7 rounded-xl flex items-center justify-center text-xs font-semibold text-white shadow-xs"
@@ -151,11 +183,29 @@ export default function Sidebar({
                       </span>
                     </div>
                   </div>
-                  <span
-                    className={`text-[9px] font-mono font-medium px-1.5 py-0.5 rounded border uppercase flex-shrink-0 ${meta.badge}`}
-                  >
-                    {meta.label}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {getEngineTag(agent)}
+                    <span
+                      className={`text-[9px] font-mono font-medium px-1.5 py-0.5 rounded border uppercase ${meta.badge}`}
+                    >
+                      {meta.label}
+                    </span>
+                    {!isSeedAgent && (
+                      <span
+                        role="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (window.confirm(`Delete agent "${agent.name}"?`)) {
+                            onDeleteAgent?.(agent.id)
+                          }
+                        }}
+                        className="opacity-0 group-hover:opacity-100 hover:text-rose-400 text-slate-500 p-0.5 rounded hover:bg-slate-800 transition-all cursor-pointer"
+                        title={`Delete agent ${agent.name}`}
+                      >
+                        <Trash2 size={12} />
+                      </span>
+                    )}
+                  </div>
                 </button>
               )
             })}

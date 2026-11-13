@@ -150,6 +150,24 @@ export default function App() {
     }
   }
 
+  const handleDeleteAgent = async (agentId) => {
+    try {
+      const res = await fetch(`/api/agents/${agentId}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || 'Failed to delete agent')
+      }
+      await fetchAgents()
+      if (activeChat === agentId) {
+        setActiveChat('group')
+      }
+      return true
+    } catch (err) {
+      alert(err.message || 'Failed to delete agent')
+      return false
+    }
+  }
+
   const handleResolveApproval = async (approvalId, decision) => {
     try {
       const res = await fetch(`/api/approvals/${approvalId}/resolve`, {
@@ -214,6 +232,7 @@ export default function App() {
         activeChat={activeChat}
         onSelectChat={setActiveChat}
         onAddAgent={() => setShowAddModal(true)}
+        onDeleteAgent={handleDeleteAgent}
         backendOnline={backendOnline}
         modelName={modelName}
       />
