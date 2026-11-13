@@ -1,6 +1,13 @@
 import { Users, Plus, Bot, Terminal, ShieldCheck, Sparkles } from 'lucide-react'
 
-export default function Sidebar({ agents, activeChat, onSelectChat, onAddAgent }) {
+export default function Sidebar({
+  agents,
+  activeChat,
+  onSelectChat,
+  onAddAgent,
+  backendOnline = true,
+  modelName = '',
+}) {
   const getAgentRoleBadge = (role = '') => {
     const r = role.toLowerCase()
     if (r.includes('lead') || r.includes('orchestrator')) {
@@ -50,10 +57,17 @@ export default function Sidebar({ agents, activeChat, onSelectChat, onAddAgent }
               <p className="text-[10px] text-slate-400 font-mono">Autonomous Team</p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="text-[10px] font-medium text-emerald-400">Live</span>
-          </div>
+          {backendOnline ? (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="text-[10px] font-medium text-emerald-400">Live</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+              <span className="text-[10px] font-medium text-rose-400">Offline</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -123,7 +137,9 @@ export default function Sidebar({ agents, activeChat, onSelectChat, onAddAgent }
                         {agent.name?.[0]?.toUpperCase()}
                       </div>
                       <span
-                        className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-slate-900 ${meta.dot}`}
+                        className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-slate-900 ${
+                          backendOnline ? meta.dot : 'bg-slate-500'
+                        }`}
                       ></span>
                     </div>
                     <div className="flex flex-col items-start min-w-0">
@@ -152,8 +168,10 @@ export default function Sidebar({ agents, activeChat, onSelectChat, onAddAgent }
         {/* Workspace status badge */}
         <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between text-[11px]">
           <div className="flex items-center gap-2 text-slate-400">
-            <Terminal size={13} className="text-emerald-400" />
-            <span className="font-mono text-slate-300">Sandbox: Active</span>
+            <Terminal size={13} className={backendOnline ? 'text-emerald-400' : 'text-rose-400'} />
+            <span className="font-mono text-slate-300">
+              {backendOnline ? 'Sandbox: Active' : 'Sandbox: Offline'}
+            </span>
           </div>
           <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
             Flash-Lite

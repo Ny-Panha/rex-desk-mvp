@@ -10,6 +10,8 @@ const fs = require('fs');
 const devWorkspace = path.resolve(__dirname, '..', 'workspaces', 'dev');
 const qaWorkspace = path.resolve(__dirname, '..', 'workspaces', 'qa');
 
+const GEMINI_MODEL = 'gemini-3.5-flash-lite';
+
 // Ensure isolated workspaces exist
 [devWorkspace, qaWorkspace].forEach((dir) => {
   if (!fs.existsSync(dir)) {
@@ -117,7 +119,7 @@ function runGeminiCli({ prompt, cwd, timeoutMs = 120000 }) {
     // Windows requires shell: true so gemini.cmd resolves.
     const child = spawn(
       'gemini',
-      ['--skip-trust', '-y', '-m', 'gemini-3.5-flash-lite', '-p', 'Agent:'],
+      ['--skip-trust', '-y', '-m', GEMINI_MODEL, '-p', 'Agent:'],
       {
         cwd,
         shell: true,
@@ -309,6 +311,7 @@ module.exports = {
   getDevWorkspaceDiff,
   hasDevWorkspaceChanges,
   isAgentEngineError,
+  GEMINI_MODEL,
   devWorkspace,
   qaWorkspace,
 };

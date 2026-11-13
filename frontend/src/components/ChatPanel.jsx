@@ -13,6 +13,8 @@ export default function ChatPanel({
   jobs = [],
   onToggleAway,
   onOpenQueue,
+  backendOnline = true,
+  modelName = '',
 }) {
   const [text, setText] = useState('')
   const feedRef = useRef(null)
@@ -86,8 +88,18 @@ export default function ChatPanel({
               )}
             </div>
             <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>{isGroup ? 'Multi-Agent Autonomous Session' : 'Direct Agent Channel'}</span>
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  backendOnline ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'
+                }`}
+              ></span>
+              <span>
+                {backendOnline
+                  ? isGroup
+                    ? 'Multi-Agent Autonomous Session'
+                    : 'Direct Agent Channel'
+                  : 'Backend Offline'}
+              </span>
             </div>
           </div>
         </div>
@@ -133,6 +145,16 @@ export default function ChatPanel({
           )}
         </div>
       </div>
+
+      {/* Offline Alert Banner */}
+      {!backendOnline && (
+        <div className="bg-rose-950/80 border-b border-rose-800/80 px-6 py-2 text-xs text-rose-300 font-mono flex items-center justify-between z-10">
+          <span>Backend offline — start the backend: cd backend &amp;&amp; node server.js (port 5001)</span>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-rose-900/60 text-rose-200 border border-rose-700/60">
+            Offline
+          </span>
+        </div>
+      )}
 
       {/* Sticky Away Banner */}
       {away?.isAway && (

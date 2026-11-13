@@ -8,7 +8,15 @@ const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { generateResponse, leadRoute, getDevWorkspaceDiff, hasDevWorkspaceChanges, isAgentEngineError, devWorkspace } = require('./services/agentEngine');
+const {
+  generateResponse,
+  leadRoute,
+  getDevWorkspaceDiff,
+  hasDevWorkspaceChanges,
+  isAgentEngineError,
+  GEMINI_MODEL,
+  devWorkspace,
+} = require('./services/agentEngine');
 
 const app = express();
 const PORT = 5001;
@@ -352,6 +360,19 @@ function seedAgents() {
     writeJSON(AWAY_FILE, { isAway: false, awaySince: null, completedWhileAway: [] });
   }
 }
+
+// ---------------------------------------------------------------------------
+// Routes – Health
+// ---------------------------------------------------------------------------
+
+// GET /api/health — check server status & active AI model
+app.get('/api/health', (_req, res) => {
+  res.json({
+    ok: true,
+    model: GEMINI_MODEL,
+    uptime: process.uptime(),
+  });
+});
 
 // ---------------------------------------------------------------------------
 // Routes – Agents

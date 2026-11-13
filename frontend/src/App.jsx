@@ -13,10 +13,25 @@ export default function App() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showQueueModal, setShowQueueModal] = useState(false)
   const [sending, setSending] = useState(false)
+  const [backendOnline, setBackendOnline] = useState(true)
+  const [modelName, setModelName] = useState('')
+
+  const fetchHealth = useCallback(async () => {
+    try {
+      const res = await fetch('/api/health')
+      if (!res.ok) throw new Error('Health check non-ok')
+      const data = await res.json()
+      setBackendOnline(true)
+      if (data.model) setModelName(data.model)
+    } catch {
+      setBackendOnline(false)
+    }
+  }, [])
 
   const fetchAgents = useCallback(async () => {
     try {
       const res = await fetch('/api/agents')
+      if (!res.ok) throw new Error('Agents fetch failed')
       const data = await res.json()
       setAgents(data)
     } catch (err) {
@@ -27,6 +42,7 @@ export default function App() {
   const fetchMessages = useCallback(async () => {
     try {
       const res = await fetch(`/api/messages?chatId=${activeChat}`)
+      if (!res.ok) throw new Error('Messages fetch failed')
       const data = await res.json()
       setMessages(data)
     } catch (err) {
@@ -37,6 +53,7 @@ export default function App() {
   const fetchJobs = useCallback(async () => {
     try {
       const res = await fetch('/api/jobs')
+      if (!res.ok) throw new Error('Jobs fetch failed')
       const data = await res.json()
       setJobs(data)
     } catch (err) {
@@ -47,6 +64,7 @@ export default function App() {
   const fetchAwayState = useCallback(async () => {
     try {
       const res = await fetch('/api/away')
+      if (!res.ok) throw new Error('Away fetch failed')
       const data = await res.json()
       setAway(data)
     } catch (err) {
@@ -55,24 +73,26 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    fetchHealth()
     fetchAgents()
     fetchJobs()
     fetchAwayState()
-  }, [fetchAgents, fetchJobs, fetchAwayState])
+  }, [fetchHealth, fetchAgents, fetchJobs, fetchAwayState])
 
   useEffect(() => {
     fetchMessages()
   }, [fetchMessages])
 
-  // Periodic poll for background jobs, messages, and away state (every 3.5s)
+  // Periodic poll for background jobs, messages, away state, and health (every 3.5s)
   useEffect(() => {
     const timer = setInterval(() => {
+      fetchHealth()
       fetchMessages()
       fetchJobs()
       fetchAwayState()
     }, 3500)
     return () => clearInterval(timer)
-  }, [fetchMessages, fetchJobs, fetchAwayState])
+  }, [fetchHealth, fetchMessages, fetchJobs, fetchAwayState])
 
   const handleSend = async (text) => {
     if (!text.trim() || sending) return
@@ -176,6 +196,8 @@ export default function App() {
         activeChat={activeChat}
         onSelectChat={setActiveChat}
         onAddAgent={() => setShowAddModal(true)}
+        backendOnline={backendOnline}
+        modelName={modelName}
       />
       <ChatPanel
         chatName={activeChatName}
@@ -188,6 +210,8 @@ export default function App() {
         jobs={jobs}
         onToggleAway={handleToggleAway}
         onOpenQueue={() => setShowQueueModal(true)}
+        backendOnline={backendOnline}
+        modelName={modelName}
       />
       {showAddModal && (
         <AddAgentModal
