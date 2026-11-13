@@ -38,6 +38,8 @@ Fixed the 6 critical internal engine disconnects identified in code audit:
    - Prevented QA Reviewer from auditing empty workspaces or self-auditing its own jobs.
    - Added agent selector dropdown in `QueueModal.jsx` and smart target parsing for `/queue @qa <task>`.
 
+7. **Commit 8 (`620c1c1`) — Honest Resume Briefing**: Report failed jobs with ⚠️ and accurate headline counts in Away Resume Briefing.
+
 ## 3. Active Environment
 - **GitHub Repository**: https://github.com/Ny-Panha/rex-desk-mvp
 - **Active Branch**: `fix/clean-engine-connections`
