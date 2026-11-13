@@ -2,57 +2,50 @@
 
 ## 1. Last Session
 - **Session**: Antigravity IDE
-- **Timestamp**: 2026-11-12T01:33:00+07:00
+- **Timestamp**: 2026-11-13T20:42:00+07:00
+- **Active Branch**: `fix/clean-engine-connections` (forked from HEAD `7aa8133`)
 
-## 2. Summary
-- **Step 1 (Skeleton + Chat UI + Echo Engine) COMPLETE**:
-  - Express backend (port 5001) + React Vite frontend (port 5173).
-- **Step 2 (Wire ONE Real Agent — Dev via Gemini CLI) COMPLETE**:
-  - Dev sandbox folder `backend/workspaces/dev/`.
-  - Gemini CLI headless runner in `agentEngine.js`.
-- **Step 3 (Lead Rex Routing & Autonomous Group Chat Coordination) COMPLETE**:
-  - Rex deterministic routing (`leadRoute`).
-  - Autonomous Group Chat execution chain.
-- **Step 4 (QA Reviewer + Git Worktree Chain) COMPLETE**:
-  - Enabled second real agent: **QA Reviewer** (`Code Quality & Security`) powered by Gemini CLI.
-  - Isolated working directories (`backend/workspaces/dev/` & `backend/workspaces/qa/`).
-  - Automated 3-Agent Collaboration Chain in Group Chat: Rex -> Dev -> QA Reviewer.
-- **Step 5 (Approval Gate for Critical Agent Actions) COMPLETE**:
-  - Intercepts critical actions: `git_push`, `file_delete`, `merge`.
-  - Storage: `backend/data/approvals.json`.
-  - Interactive Approval Gate Card in UI with `[Approve]` and `[Reject]` buttons.
-- **Step 6 (Away Mode-lite & Background Job Queue) COMPLETE**:
-  - Storage: `backend/data/jobs.json` & `backend/data/away.json`.
-  - Background Queue Worker: `triggerQueueProcessing()` picks up pending jobs and executes them via Gemini CLI (Dev) + audits via QA Reviewer.
-  - Interactive `QueueModal.jsx`, header buttons `[Queue]` and `[Step Away]` / `[I'm Back (Resume)]`, sticky away banner, and Morning / Resume Briefing.
-- **UI/UX Design System & Polish Pass (agents-design / impeccable) COMPLETE**:
-  - **Surface & Color Hierarchy**: Dark cockpit design (`#0b0f17` canvas, `#0d121d` sidebar, `#0f1623` cards and panels).
-  - **Typography & Spacing**: Clean fonts, `leading-relaxed` for Khmer text readability, `max-w-4xl` chat centering eliminating awkward empty space on wide screens.
-  - **Syntax Highlighting & Code Blocks**: Integrated code block viewer with language headers, dark background, and clean monospace font.
-  - **Refined Role Badges & Visual Identifiers**:
-    - Rex: Lead Orchestrator (Indigo `#6366f1`)
-    - Dev: Fullstack Developer (Emerald `#10b981`)
-    - QA Reviewer: Code Quality & Security (Sky `#0ea5e9`)
-  - **Quick Action Chips**: Added quick clickable prompt chips (`/queue <task>`, `Review Code`, `Push to GitHub`) above input bar for rapid testing and productivity.
-  - **Modals Polish**: Glassmorphism with backdrop blur for `AddAgentModal` and `QueueModal`.
+## 2. Summary of Changes (Clean Engine Connections Pass)
+Fixed the 6 critical internal engine disconnects identified in code audit:
+
+1. **Commit 1 (`c68b23e`) — Approval Gate Real Execution**:
+   - Replaced canned/mock strings for `git_push` and `merge` with real child process executions (`execSync`) in the repository root.
+   - Captured real stdout / stderr; surfaces exact errors (authentication, rejected pushes, merge conflicts) to user & agent instead of falsifying success.
+   - Added path boundary sanitization (`path.basename`) for `file_delete` to prevent directory traversal.
+
+2. **Commit 2 (`d15f778`) — Honest Queue Status & Startup Recovery**:
+   - Created `isAgentEngineError()` helper to detect Gemini CLI error messages, timeouts, and process failures.
+   - Queue worker marks jobs as `'failed'` on error instead of falsely claiming `'completed'`.
+   - Added `recoverQueueOnStartup()`: resets interrupted `'running'` jobs to `'pending'` on server reboot and immediately resumes queue processing.
+   - Added `'failed'` badge (`AlertTriangle` in rose) to `QueueModal.jsx`.
+
+3. **Commit 3 (`25c1d4b`) — Group Chat Real QA Reviewer Execution**:
+   - Eliminated canned mock reply (`"ខ្ញុំកំពុងរៀបចំពិនិត្យមើល..."`) when Rex routes to QA Reviewer or on `@qa` mention.
+   - Calls real `generateResponse({ agent: qaAgent, forceEngine: true, reviewContext: devDiff })` via Gemini CLI.
+
+4. **Commit 4 (`2ecf87f`) — Atomic Serialized Message Persistence (Eliminate Race Condition)**:
+   - Replaced 240s dirty in-memory reads and blind `writeJSON(MESSAGES_FILE, messages)` overwrites with serialized promise-queue based `appendMessages()` and `updateMessages()`.
+   - Incoming user messages and background queue worker logs are written immediately without overwriting each other.
+
+5. **Commit 5 (`3a40d89`) — Gemini AI Engine for Custom Added Agents**:
+   - Changed backend default for new agents from `echo` to `gemini`.
+   - Extended `agentEngine.js` so any custom agent with `engine: 'gemini'` invokes Gemini CLI with a tailored role prompt instruction in Khmer + English.
+   - Added AI Engine selector (`Gemini CLI` vs `Echo`) to `AddAgentModal.jsx` and piped it through `App.jsx`.
+
+6. **Commit 6 (`2a0c7e1`) — Honor targetAgent & Eliminate Ghost Diffs**:
+   - Queue worker dynamically resolves `nextJob.targetAgent` (e.g. `@QA Reviewer`, `@Dev`, or custom specialist) instead of hardcoding `Dev`.
+   - Updated `getDevWorkspaceDiff()` to return clean empty string when no user files exist, and added `hasDevWorkspaceChanges()`.
+   - Prevented QA Reviewer from auditing empty workspaces or self-auditing its own jobs.
+   - Added agent selector dropdown in `QueueModal.jsx` and smart target parsing for `/queue @qa <task>`.
 
 ## 3. Active Environment
 - **GitHub Repository**: https://github.com/Ny-Panha/rex-desk-mvp
-- **Backend API**: `http://localhost:5001` (Node.js Express + Lead Routing + Dev & QA Gemini Runners + Approval Gate + Queue Worker)
+- **Active Branch**: `fix/clean-engine-connections`
+- **Backend API**: `http://localhost:5001` (Node.js Express + Lead Routing + Dev & QA Gemini Runners + Real Approval Gate + Resilient Queue Worker)
 - **Frontend UI**: `http://localhost:5173` (Vite + React)
 - **Workspaces**:
   - Dev: `c:\Users\nhastar\Desktop\Agent Dev\rex-desk-mvp\backend\workspaces\dev`
   - QA: `c:\Users\nhastar\Desktop\Agent Dev\rex-desk-mvp\backend\workspaces\qa`
-- **Files in Dev Workspace**:
-  - `agents.js` (`getAgents()`, `findAgentByName(name)` with defensive guards)
-  - `helper.js` (`formatCurrency(amount, currency)` function)
-  - `validator.js` (`validateEmail(email)` function)
 
-## 4. Master 6-Step Plan Status
-- [x] **Step 1: Skeleton + Chat UI (Echo agent)** — COMPLETE
-- [x] **Step 2: Real Dev Agent via Gemini CLI in sandbox** — COMPLETE
-- [x] **Step 3: Lead (Rex) routing & group chat coordination** — COMPLETE
-- [x] **Step 4: QA Reviewer + Git Worktree Chain** — COMPLETE
-- [x] **Step 5: Approval gate for critical actions** — COMPLETE
-- [x] **Step 6: Away mode-lite (job queue in store, resume summary on reopen)** — COMPLETE
-- [x] **UI/UX Craft & Polish Pass** — COMPLETE
+## 4. Next Steps
+- Push branch `fix/clean-engine-connections` to remote repository `origin` for Nha's commit-by-commit review before merging into `main`.
