@@ -350,7 +350,11 @@ export default function ChatPanel({
           </div>
           <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono px-1">
             <span>Press Enter to send · Shift+Enter for new line</span>
-            <span>Gemini 3.5 Flash-Lite</span>
+            {backendOnline && modelName ? (
+              <span>{modelName}</span>
+            ) : !backendOnline ? (
+              <span className="text-rose-400">Offline</span>
+            ) : null}
           </div>
         </div>
       </div>

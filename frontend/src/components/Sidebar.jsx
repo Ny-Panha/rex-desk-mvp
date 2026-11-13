@@ -223,9 +223,15 @@ export default function Sidebar({
               {backendOnline ? 'Sandbox: Active' : 'Sandbox: Offline'}
             </span>
           </div>
-          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            Flash-Lite
-          </span>
+          {backendOnline && modelName ? (
+            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              {modelName.replace('gemini-', '')}
+            </span>
+          ) : !backendOnline ? (
+            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">
+              Offline
+            </span>
+          ) : null}
         </div>
 
         {/* Add Agent Button */}

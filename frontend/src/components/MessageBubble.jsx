@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { ShieldAlert, Check, X, Sun, Bot, User, Code2, Terminal } from 'lucide-react'
 
 // Render bold (**text**) and inline code (`code`) inside non-code-block text
@@ -28,6 +29,50 @@ function renderInlineFormatting(paragraph) {
   })
 }
 
+function CodeBlock({ lang, code }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(code)
+      }
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch (e) {
+      // fallback
+    }
+  }
+
+  return (
+    <div className="bg-[#080c14] border border-slate-800/80 rounded-xl overflow-hidden my-2.5 shadow-md">
+      <div className="bg-slate-900/90 px-3 py-1.5 border-b border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-400">
+        <div className="flex items-center gap-1.5">
+          <Code2 size={12} className="text-indigo-400" />
+          <span>{lang}</span>
+        </div>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="text-slate-400 hover:text-white px-2 py-0.5 rounded bg-slate-800/80 hover:bg-slate-700/80 transition-colors cursor-pointer flex items-center gap-1"
+        >
+          {copied ? (
+            <>
+              <Check size={11} className="text-emerald-400" />
+              <span className="text-emerald-400 font-medium">Copied</span>
+            </>
+          ) : (
+            'Copy'
+          )}
+        </button>
+      </div>
+      <pre className="p-3 text-xs font-mono text-emerald-300 overflow-x-auto leading-relaxed">
+        <code>{code}</code>
+      </pre>
+    </div>
+  )
+}
+
 // Lightweight parser for code blocks, inline code, and formatting
 function FormattedContent({ text = '' }) {
   // If text contains triple-backtick code blocks
@@ -43,23 +88,7 @@ function FormattedContent({ text = '' }) {
             const lang = hasLang ? firstLine : 'code'
             const code = hasLang ? lines.slice(1).join('\n') : lines.join('\n')
 
-            return (
-              <div
-                key={idx}
-                className="bg-[#080c14] border border-slate-800/80 rounded-xl overflow-hidden my-2.5 shadow-md"
-              >
-                <div className="bg-slate-900/90 px-3 py-1.5 border-b border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-400">
-                  <div className="flex items-center gap-1.5">
-                    <Code2 size={12} className="text-indigo-400" />
-                    <span>{lang}</span>
-                  </div>
-                  <span className="text-slate-600">read-only</span>
-                </div>
-                <pre className="p-3 text-xs font-mono text-emerald-300 overflow-x-auto leading-relaxed">
-                  <code>{code}</code>
-                </pre>
-              </div>
-            )
+            return <CodeBlock key={idx} lang={lang} code={code} />
           }
 
           return (
@@ -230,7 +259,7 @@ export default function MessageBubble({ message, onResolveApproval }) {
                 ) : isApproved ? (
                   <div className="w-full flex items-center gap-2 px-3.5 py-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs font-semibold">
                     <Check size={15} className="stroke-[2.5]" />
-                    <span>✓ Approved by Nha (Executed on Workspace)</span>
+                    <span>✓ Approved by Nha (Executed)</span>
                   </div>
                 ) : isRejected ? (
                   <div className="w-full flex items-center gap-2 px-3.5 py-2.5 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs font-semibold">
