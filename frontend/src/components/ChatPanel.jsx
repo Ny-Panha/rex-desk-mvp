@@ -18,19 +18,52 @@ export default function ChatPanel({
 }) {
   const [text, setText] = useState('')
   const [sendError, setSendError] = useState(null)
+  const [isNearBottom, setIsNearBottom] = useState(true)
+  const [hasUnreadBelow, setHasUnreadBelow] = useState(false)
   const feedRef = useRef(null)
   const textareaRef = useRef(null)
+  const prevMessagesLengthRef = useRef(messages.length)
 
   const pendingJobsCount = jobs.filter(
     (j) => j.status === 'pending' || j.status === 'running'
   ).length
 
-  // Auto-scroll to bottom on new messages
-  useEffect(() => {
-    if (feedRef.current) {
-      feedRef.current.scrollTop = feedRef.current.scrollHeight
+  const handleScroll = () => {
+    if (!feedRef.current) return
+    const { scrollTop, scrollHeight, clientHeight } = feedRef.current
+    const distanceFromBottom = scrollHeight - (scrollTop + clientHeight)
+    const near = distanceFromBottom <= 120
+    setIsNearBottom(near)
+    if (near) {
+      setHasUnreadBelow(false)
     }
-  }, [messages])
+  }
+
+  const scrollToBottom = () => {
+    if (feedRef.current) {
+      feedRef.current.scrollTo({
+        top: feedRef.current.scrollHeight,
+        behavior: 'smooth',
+      })
+      setHasUnreadBelow(false)
+      setIsNearBottom(true)
+    }
+  }
+
+  // Auto-scroll on new messages ONLY when near bottom
+  useEffect(() => {
+    if (messages.length > prevMessagesLengthRef.current) {
+      if (isNearBottom) {
+        if (feedRef.current) {
+          feedRef.current.scrollTop = feedRef.current.scrollHeight
+        }
+        setHasUnreadBelow(false)
+      } else {
+        setHasUnreadBelow(true)
+      }
+    }
+    prevMessagesLengthRef.current = messages.length
+  }, [messages, isNearBottom])
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -189,7 +222,7 @@ export default function ChatPanel({
       )}
 
       {/* Message Feed Container (Constrained width for comfortable reading) */}
-      <div ref={feedRef} className="flex-1 overflow-y-auto p-4 sm:p-6">
+      <div ref={feedRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-4 sm:p-6 relative">
         <div className="max-w-4xl mx-auto space-y-3.5">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -232,6 +265,19 @@ export default function ChatPanel({
                   (Group Chat Dev+QA can take 1-4 minutes)
                 </p>
               </div>
+            </div>
+          )}
+
+          {/* Floating New Messages Button */}
+          {hasUnreadBelow && (
+            <div className="sticky bottom-2 flex justify-center z-20 pointer-events-none">
+              <button
+                type="button"
+                onClick={scrollToBottom}
+                className="pointer-events-auto flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xl shadow-indigo-600/40 border border-indigo-400/40 cursor-pointer transition-all active:scale-95 animate-bounce"
+              >
+                <span>↓ New messages</span>
+              </button>
             </div>
           )}
         </div>

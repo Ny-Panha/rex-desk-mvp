@@ -44,7 +44,15 @@ export default function App() {
       const res = await fetch(`/api/messages?chatId=${activeChat}`)
       if (!res.ok) throw new Error('Messages fetch failed')
       const data = await res.json()
-      setMessages(data)
+      setMessages((prev) => {
+        if (
+          prev.length === data.length &&
+          (prev.length === 0 || prev[prev.length - 1]?.id === data[data.length - 1]?.id)
+        ) {
+          return prev
+        }
+        return data
+      })
     } catch (err) {
       console.error('Failed to fetch messages:', err)
     }
@@ -111,7 +119,12 @@ export default function App() {
         throw new Error(`Server returned ${res.status}`)
       }
       const newMessages = await res.json()
-      setMessages((prev) => [...prev, ...newMessages])
+      setMessages((prev) => {
+        const existingIds = new Set(prev.map((m) => m.id))
+        const uniqueToAdd = newMessages.filter((m) => !existingIds.has(m.id))
+        if (uniqueToAdd.length === 0) return prev
+        return [...prev, ...uniqueToAdd]
+      })
       fetchJobs()
       fetchAwayState()
       return true
