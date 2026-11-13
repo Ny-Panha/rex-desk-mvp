@@ -27,6 +27,7 @@ export default function ChatPanel({
   const pendingJobsCount = jobs.filter(
     (j) => j.status === 'pending' || j.status === 'running'
   ).length
+  const failedJobsCount = jobs.filter((j) => j.status === 'failed').length
 
   const handleScroll = () => {
     if (!feedRef.current) return
@@ -160,6 +161,11 @@ export default function ChatPanel({
               </span>
             ) : (
               <span className="text-slate-500 text-[10px] font-mono">0</span>
+            )}
+            {failedJobsCount > 0 && (
+              <span className="bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold">
+                {failedJobsCount} failed
+              </span>
             )}
           </button>
 

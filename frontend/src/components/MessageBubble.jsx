@@ -246,6 +246,10 @@ export default function MessageBubble({ message, onResolveApproval }) {
     }
 
     // 3. Normal Agent Message
+    const isError =
+      typeof message.text === 'string' &&
+      (message.text.startsWith('⚠️') || message.text.startsWith('Error processing'))
+
     return (
       <div className="flex justify-start my-1.5">
         <div className="max-w-[92%] sm:max-w-[85%]">
@@ -262,10 +266,21 @@ export default function MessageBubble({ message, onResolveApproval }) {
                 {message.senderRole}
               </span>
             )}
+            {isError && (
+              <span className="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                Agent Error
+              </span>
+            )}
             {time && <span className="text-[10px] text-slate-500 font-mono ml-auto">{time}</span>}
           </div>
 
-          <div className="bg-[#0f1623] border border-slate-800/90 rounded-2xl rounded-tl-xs p-4 shadow-sm">
+          <div
+            className={`rounded-2xl rounded-tl-xs p-4 shadow-sm ${
+              isError
+                ? 'bg-[#150e14] border-2 border-rose-500/50 shadow-rose-500/10'
+                : 'bg-[#0f1623] border border-slate-800/90'
+            }`}
+          >
             <FormattedContent text={message.text} />
           </div>
         </div>
