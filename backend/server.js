@@ -572,6 +572,7 @@ app.post('/api/messages', async (req, res) => {
             currentAway.completedWhileAway.push({
               task: text,
               agent: devAgent.name,
+              status: isAgentEngineError(devResponseText) ? 'failed' : 'completed',
               completedAt: new Date().toISOString(),
             });
             setAwayState(currentAway);
@@ -643,6 +644,7 @@ app.post('/api/messages', async (req, res) => {
             currentAway.completedWhileAway.push({
               task: text,
               agent: qaAgent.name,
+              status: isAgentEngineError(qaResponseText) ? 'failed' : 'completed',
               completedAt: new Date().toISOString(),
             });
             setAwayState(currentAway);
@@ -919,11 +921,30 @@ app.post('/api/away/toggle', async (req, res) => {
     const completedItems = away.completedWhileAway || [];
     let briefingText = '';
 
+    const done = completedItems.filter((item) => item.status !== 'failed');
+    const failed = completedItems.filter((item) => item.status === 'failed');
+
     if (completedItems.length > 0) {
       const taskList = completedItems
-        .map((item, idx) => `  ${idx + 1}. ✅ **${item.task}** (ដោយ ${item.agent || 'Dev'})`)
+        .map((item, idx) => {
+          if (item.status === 'failed') {
+            return `  ${idx + 1}. ⚠️ **${item.task}** (ដោយ ${item.agent || 'Dev'}) — បរាជ័យ`;
+          }
+          return `  ${idx + 1}. ✅ **${item.task}** (ដោយ ${item.agent || 'Dev'})`;
+        })
         .join('\n');
-      briefingText = `🌅 [Resume Briefing]: សូមស្វាគមន៍ការត្រឡប់មកវិញ Nha! 👋\n\nខណៈពេលអ្នកនៅក្រៅ ពួកយើងបានបំពេញការងារចំនួន ${completedItems.length} tasks ដោយស្វ័យប្រវត្តិ:\n${taskList}\n\n📂 Workspaces ត្រូវបាន update រួចរាល់។ តើអ្នកចង់ឱ្យពួកយើងធ្វើអ្វីបន្តទៀត pro?`;
+
+      if (done.length > 0) {
+        let summaryHeader = `ខណៈពេលអ្នកនៅក្រៅ ពួកយើងបានបំពេញការងារចំនួន ${done.length} tasks ដោយស្វ័យប្រវត្តិ:`;
+        if (failed.length > 0) {
+          summaryHeader += `\n⚠️ បរាជ័យ ${failed.length} tasks — សូមពិនិត្យ jobs.json / Queue សម្រាប់ error លម្អិត`;
+        }
+        briefingText = `🌅 [Resume Briefing]: សូមស្វាគមន៍ការត្រឡប់មកវិញ Nha! 👋\n\n${summaryHeader}\n${taskList}\n\n📂 Workspaces ត្រូវបាន update រួចរាល់។ តើអ្នកចង់ឱ្យពួកយើងធ្វើអ្វីបន្តទៀត pro?`;
+      } else {
+        // done.length === 0 && failed.length > 0
+        const failedHeader = `⚠️ បរាជ័យ ${failed.length} tasks — សូមពិនិត្យ jobs.json / Queue សម្រាប់ error លម្អិត:`;
+        briefingText = `🌅 [Resume Briefing]: សូមស្វាគមន៍ការត្រឡប់មកវិញ Nha! 👋\n\n${failedHeader}\n${taskList}\n\nតើអ្នកចង់ឱ្យពួកយើងធ្វើអ្វីបន្តទៀត pro?`;
+      }
     } else {
       briefingText = `🌅 [Resume Briefing]: សូមស្វាគមន៍ការត្រឡប់មកវិញ Nha! 👋\n\nក្នុងកំឡុងពេលអ្នកនៅក្រៅ គ្មាន task ថ្មីក្នុង queue ទេ។ ប្រព័ន្ធបានត្រៀមខ្លួនជាស្រេចសម្រាប់ task បន្ទាប់របស់អ្នក!`;
     }
