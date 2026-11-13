@@ -548,12 +548,27 @@ app.post('/api/messages', async (req, res) => {
           }
         }
       } else if (routing.target === 'QA Reviewer' || /@qa\b/i.test(text)) {
-        const qaAgent = agents.find((a) => a.name === 'QA Reviewer');
+        const qaAgent =
+          agents.find((a) => a.name === 'QA Reviewer') ||
+          agents.find((a) => a.role && a.role.includes('Quality'));
+
         if (qaAgent) {
+          const devDiff = getDevWorkspaceDiff();
+          const updatedHistory = [...history, userMsg, rexMsg];
+          const qaResponseText = await generateResponse({
+            agent: qaAgent,
+            prompt: text,
+            chatId: 'group',
+            history: updatedHistory,
+            senderName,
+            forceEngine: true,
+            reviewContext: devDiff,
+          });
+
           const qaMsg = {
             id: uuidv4(),
             chatId: 'group',
-            text: `[QA Reviewer (Code Quality & Security)]: ខ្ញុំបានទទួលការងារពី Rex! ខ្ញុំកំពុងរៀបចំពិនិត្យមើល...`,
+            text: qaResponseText,
             senderName: qaAgent.name,
             senderRole: qaAgent.role,
             senderId: qaAgent.id,
@@ -562,6 +577,17 @@ app.post('/api/messages', async (req, res) => {
           };
           messages.push(qaMsg);
           newMessages.push(qaMsg);
+
+          // Track in away mode if active
+          const currentAway = getAwayState();
+          if (currentAway.isAway) {
+            currentAway.completedWhileAway.push({
+              task: text,
+              agent: qaAgent.name,
+              completedAt: new Date().toISOString(),
+            });
+            setAwayState(currentAway);
+          }
         }
       }
     } else {
