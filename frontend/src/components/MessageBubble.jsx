@@ -1,5 +1,33 @@
 import { ShieldAlert, Check, X, Sun, Bot, User, Code2, Terminal } from 'lucide-react'
 
+// Render bold (**text**) and inline code (`code`) inside non-code-block text
+function renderInlineFormatting(paragraph) {
+  if (!paragraph || typeof paragraph !== 'string') return paragraph
+  const tokens = paragraph.split(/(\*\*[\s\S]*?\*\*|`[^`\n]+`)/g)
+  if (tokens.length === 1) return paragraph
+
+  return tokens.map((token, i) => {
+    if (token.startsWith('**') && token.endsWith('**') && token.length >= 4) {
+      return (
+        <strong key={i} className="font-bold text-white">
+          {token.slice(2, -2)}
+        </strong>
+      )
+    }
+    if (token.startsWith('`') && token.endsWith('`') && token.length >= 2) {
+      return (
+        <code
+          key={i}
+          className="px-1.5 py-0.5 rounded bg-[#101726] text-emerald-300 font-mono text-[11px] border border-slate-700/70 inline-block align-middle my-0.5"
+        >
+          {token.slice(1, -1)}
+        </code>
+      )
+    }
+    return token
+  })
+}
+
 // Lightweight parser for code blocks, inline code, and formatting
 function FormattedContent({ text = '' }) {
   // If text contains triple-backtick code blocks
@@ -36,7 +64,7 @@ function FormattedContent({ text = '' }) {
 
           return (
             <p key={idx} className="whitespace-pre-wrap leading-relaxed break-words text-slate-200">
-              {part}
+              {renderInlineFormatting(part)}
             </p>
           )
         })}
@@ -46,7 +74,7 @@ function FormattedContent({ text = '' }) {
 
   return (
     <p className="whitespace-pre-wrap leading-relaxed break-words text-slate-200">
-      {text}
+      {renderInlineFormatting(text)}
     </p>
   )
 }
