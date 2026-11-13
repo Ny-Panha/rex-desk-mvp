@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Plus, Clock, CheckCircle2, Loader2, Layers, Bot } from 'lucide-react'
+import { X, Plus, Clock, CheckCircle2, Loader2, Layers, Bot, AlertTriangle } from 'lucide-react'
 
 export default function QueueModal({ onClose, jobs, onEnqueue }) {
   const [taskText, setTaskText] = useState('')
@@ -94,6 +94,7 @@ export default function QueueModal({ onClose, jobs, onEnqueue }) {
                 const isRunning = job.status === 'running'
                 const isCompleted = job.status === 'completed'
                 const isPending = job.status === 'pending'
+                const isFailed = job.status === 'failed'
 
                 return (
                   <div
@@ -114,6 +115,12 @@ export default function QueueModal({ onClose, jobs, onEnqueue }) {
                         <span className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono font-medium">
                           <CheckCircle2 size={10} />
                           completed
+                        </span>
+                      )}
+                      {isFailed && (
+                        <span className="flex items-center gap-1 text-[10px] text-rose-400 bg-rose-500/10 border border-rose-500/30 px-2 py-0.5 rounded-full font-mono font-medium">
+                          <AlertTriangle size={10} />
+                          failed
                         </span>
                       )}
                       {isPending && (

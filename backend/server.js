@@ -8,7 +8,7 @@ const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { generateResponse, leadRoute, getDevWorkspaceDiff, devWorkspace } = require('./services/agentEngine');
+const { generateResponse, leadRoute, getDevWorkspaceDiff, isAgentEngineError, devWorkspace } = require('./services/agentEngine');
 
 const app = express();
 const PORT = 5001;
@@ -86,6 +86,7 @@ async function triggerQueueProcessing() {
       // Run Dev response via Gemini CLI
       const history = messages.filter((m) => m.chatId === 'group');
       let resultText = '';
+      let isError = false;
       try {
         resultText = await generateResponse({
           agent: devAgent,
@@ -95,15 +96,19 @@ async function triggerQueueProcessing() {
           senderName: 'Queue Worker',
           forceEngine: true,
         });
+        if (isAgentEngineError(resultText)) {
+          isError = true;
+        }
       } catch (err) {
-        resultText = `Error processing queue task: ${err.message}`;
+        isError = true;
+        resultText = `⚠️ Error processing queue task: ${err.message}`;
       }
 
-      // Mark job completed
+      // Mark job status honestly: 'failed' if Gemini/runner threw an error, 'completed' otherwise
       const updatedJobs = readJSON(JOBS_FILE);
       const currentJob = updatedJobs.find((j) => j.id === nextJob.id);
       if (currentJob) {
-        currentJob.status = 'completed';
+        currentJob.status = isError ? 'failed' : 'completed';
         currentJob.result = resultText;
         currentJob.completedAt = new Date().toISOString();
         writeJSON(JOBS_FILE, updatedJobs);
@@ -865,10 +870,41 @@ app.post('/api/away/toggle', async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// Queue Recovery on Startup
+// ---------------------------------------------------------------------------
+
+function recoverQueueOnStartup() {
+  const jobs = readJSON(JOBS_FILE);
+  let modified = false;
+
+  // 1. Any job that was 'running' when the server stopped/crashed was interrupted
+  jobs.forEach((j) => {
+    if (j.status === 'running') {
+      console.log(`🔄 [Queue Startup]: Resetting interrupted job "${j.task}" (${j.id}) from running to pending.`);
+      j.status = 'pending';
+      j.interruptedAt = new Date().toISOString();
+      modified = true;
+    }
+  });
+
+  if (modified) {
+    writeJSON(JOBS_FILE, jobs);
+  }
+
+  // 2. Check if there are pending jobs, and resume queue processing
+  const hasPending = jobs.some((j) => j.status === 'pending');
+  if (hasPending) {
+    console.log('🚀 [Queue Startup]: Pending jobs detected. Resuming background queue worker...');
+    triggerQueueProcessing();
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Start
 // ---------------------------------------------------------------------------
 
 seedAgents();
+recoverQueueOnStartup();
 
 app.listen(PORT, () => {
   console.log(`🚀 Rex Desk backend running on http://localhost:${PORT}`);

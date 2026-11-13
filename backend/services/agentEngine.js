@@ -247,10 +247,31 @@ async function generateResponse({
   return echoEngine({ agent, prompt });
 }
 
+/**
+ * Checks if an output from Gemini CLI or the engine indicates an error.
+ * @param {string} text
+ * @returns {boolean}
+ */
+function isAgentEngineError(text) {
+  if (!text || typeof text !== 'string') return true;
+  const trimmed = text.trim();
+  if (trimmed.length === 0) return true;
+  if (
+    trimmed.startsWith('⚠️ Gemini CLI error:') ||
+    trimmed.startsWith('⚠️ Error:') ||
+    trimmed.startsWith('Error processing queue task:') ||
+    trimmed.startsWith('Error reading workspace:')
+  ) {
+    return true;
+  }
+  return false;
+}
+
 module.exports = {
   generateResponse,
   leadRoute,
   getDevWorkspaceDiff,
+  isAgentEngineError,
   devWorkspace,
   qaWorkspace,
 };
